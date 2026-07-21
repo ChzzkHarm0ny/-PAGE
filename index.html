@@ -419,6 +419,7 @@
       }
     }
 
+    // 💡 '참여:' 글씨 완전 삭제 및 컨텐츠 바로 아래 명단 배치 구조
     function renderWeeklyWidget() {
       const widget = document.getElementById('weekly-widget');
       widget.innerHTML = '';
@@ -467,12 +468,12 @@
           const linkedScheduleMember = convertMemberNameToLink(scheduleMember);
 
           return `
-            <div class="bg-slate-800/80 p-2.5 rounded-lg text-xs border border-slate-700/80 text-slate-200 space-y-1">
+            <div class="bg-slate-800/80 p-2.5 rounded-lg text-xs border border-slate-700/80 text-slate-200 space-y-1.5">
               <div class="flex justify-between items-center">
                 <strong class="text-emerald-400"><i class="fa-regular fa-clock text-[10px]"></i> ${timeVal || '시간미정'}</strong>
               </div>
               <div class="font-bold text-white">${linkedTitle}</div>
-              ${linkedScheduleMember ? `<div class="text-[11px] text-slate-400 pt-1 border-t border-slate-700/60">참여: ${linkedScheduleMember}</div>` : ''}
+              ${linkedScheduleMember ? `<div class="text-[11px] text-slate-300 pt-1 border-t border-slate-700/60">${linkedScheduleMember}</div>` : ''}
             </div>
           `;
         }).join('');
@@ -491,12 +492,10 @@
       });
     }
 
-    // 💡 History_MultiGame 데이터는 description 및 member 위주의 카드 형태로 렌더링
     function renderAllHistory() {
       const container = document.getElementById('container-history');
       container.innerHTML = '';
 
-      // 1. 경기/대전 기록 (Contents_History)
       let matchCardsHTML = db.historyMatch.map(h => {
         const cat = String(h.category || h.카테고리 || '').trim();
         if (currentCategoryFilter !== 'all' && cat !== currentCategoryFilter) return '';
@@ -598,7 +597,6 @@
         `;
       }).join('');
 
-      // 2. 종합게임 / 기타 기록 (History_MultiGame) -> 설명 및 콤마구분 멤버 링크 렌더링
       let multiCardsHTML = db.historyMulti.map(g => {
         const cat = String(g.category || g.카테고리 || '종합게임').trim();
         if (currentCategoryFilter !== 'all' && cat !== currentCategoryFilter) return '';
@@ -628,8 +626,9 @@
             ` : ''}
 
             ${linkedMembers ? `
-              <div class="text-xs text-slate-400 pt-2 border-t border-slate-800/80">
-                <strong class="text-slate-300">참여 멤버:</strong> ${linkedMembers}
+              <div class="text-xs text-slate-400 pt-2 border-t border-slate-800/80 space-y-1">
+                <strong class="text-slate-300 block mb-1">참여 멤버</strong>
+                <div class="flex flex-wrap gap-1">${linkedMembers}</div>
               </div>
             ` : ''}
           </div>
@@ -704,7 +703,7 @@
             <div class="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-[10px] p-1.5 rounded-md mt-1 leading-relaxed space-y-0.5">
               ${timeVal ? `<strong class="text-emerald-400 block font-bold">${timeVal}</strong>` : ''}
               <div>${linkedTitle}</div>
-              ${linkedScheduleMember ? `<div class="text-[9px] text-slate-400">참여: ${linkedScheduleMember}</div>` : ''}
+              ${linkedScheduleMember ? `<div class="text-[9px] text-slate-300 pt-0.5 border-t border-slate-700/50">${linkedScheduleMember}</div>` : ''}
             </div>
           `;
         }).join('');
