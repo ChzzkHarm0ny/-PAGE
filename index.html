@@ -120,7 +120,6 @@
 
       <!-- TAB 3: HISTORY -->
       <div id="tab-history" class="tab-content hidden space-y-8">
-        <!-- 💡 컨텐츠 탭 카테고리 세분화 -->
         <div class="flex flex-wrap gap-2 pb-2 border-b border-slate-800">
           <button onclick="filterHistory('all')" id="hist-btn-all" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 transition">전체 보기</button>
           <button onclick="filterHistory('정기모임')" id="hist-btn-정기모임" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">📅 정기모임</button>
@@ -205,28 +204,20 @@
       }, 600);
     }
 
-    function getRaceColor(text, explicitRace) {
+    function getRaceIconOnly(text, explicitRace) {
       const raceStr = String(explicitRace || text || '').toLowerCase();
-
-      if (raceStr.includes('테란') || raceStr.includes('terran') || raceStr === 't') {
-        return { textClass: 'race-terran-text', icon: RACE_ICONS.terran };
-      }
-      if (raceStr.includes('프로토스') || raceStr.includes('토스') || raceStr.includes('protoss') || raceStr === 'p') {
-        return { textClass: 'race-protoss-text', icon: RACE_ICONS.protoss };
-      }
-      if (raceStr.includes('저그') || raceStr.includes('zerg') || raceStr === 'z') {
-        return { textClass: 'race-zerg-text', icon: RACE_ICONS.zerg };
-      }
+      if (raceStr.includes('테란') || raceStr.includes('terran') || raceStr === 't') return RACE_ICONS.terran;
+      if (raceStr.includes('프로토스') || raceStr.includes('토스') || raceStr.includes('protoss') || raceStr === 'p') return RACE_ICONS.protoss;
+      if (raceStr.includes('저그') || raceStr.includes('zerg') || raceStr === 'z') return RACE_ICONS.zerg;
 
       const matchedMember = db.members.find(m => (m.name || m.이름 || '').trim() === String(text).trim());
       if (matchedMember) {
         const race = (matchedMember.race || matchedMember.종족 || '').trim();
-        if (race === '테란') return { textClass: 'race-terran-text', icon: RACE_ICONS.terran };
-        if (race === '프로토스') return { textClass: 'race-protoss-text', icon: RACE_ICONS.protoss };
-        if (race === '저그') return { textClass: 'race-zerg-text', icon: RACE_ICONS.zerg };
+        if (race === '테란') return RACE_ICONS.terran;
+        if (race === '프로토스') return RACE_ICONS.protoss;
+        if (race === '저그') return RACE_ICONS.zerg;
       }
-
-      return { textClass: 'text-emerald-400', icon: '' };
+      return '';
     }
 
     function convertMemberNameToLink(text) {
@@ -428,6 +419,7 @@
       }
     }
 
+    // 💡 Schedules 탭의 member(참여멤버) 데이터 연동 반영 주간 일정 위젯
     function renderWeeklyWidget() {
       const widget = document.getElementById('weekly-widget');
       widget.innerHTML = '';
@@ -472,11 +464,16 @@
           const originalTitle = m.title || m.일정내용 || m.내용 || '';
           const linkedTitle = convertMemberNameToLink(originalTitle);
           const timeVal = m.time || m.시간 || '';
+          const scheduleMember = (m.member || m.참여멤버 || '').trim();
+          const linkedScheduleMember = convertMemberNameToLink(scheduleMember);
 
           return `
-            <div class="bg-slate-800/80 p-2 rounded-lg text-xs border border-slate-700/80 text-slate-200">
-              <strong class="text-emerald-400 block mb-1"><i class="fa-regular fa-clock text-[10px]"></i> ${timeVal || '시간미정'}</strong>
-              ${linkedTitle}
+            <div class="bg-slate-800/80 p-2.5 rounded-lg text-xs border border-slate-700/80 text-slate-200 space-y-1">
+              <div class="flex justify-between items-center">
+                <strong class="text-emerald-400"><i class="fa-regular fa-clock text-[10px]"></i> ${timeVal || '시간미정'}</strong>
+              </div>
+              <div class="font-bold text-white">${linkedTitle}</div>
+              ${linkedScheduleMember ? `<div class="text-[11px] text-slate-400 pt-1 border-t border-slate-700/60">참여: ${linkedScheduleMember}</div>` : ''}
             </div>
           `;
         }).join('');
@@ -484,7 +481,7 @@
         if(!eventsHTML) eventsHTML = `<span class="text-xs text-slate-600 block text-center py-2">일정 없음</span>`;
 
         widget.innerHTML += `
-          <div class="dash-card p-3 rounded-xl flex flex-col gap-2 min-h-[110px]">
+          <div class="dash-card p-3 rounded-xl flex flex-col gap-2 min-h-[120px]">
             <div class="text-center pb-1.5 border-b border-slate-800">
               <span class="font-bold text-emerald-400 text-xs">${d}요일</span>
               <span class="text-[10px] text-slate-500 block">${targetM}/${targetD}</span>
@@ -495,7 +492,6 @@
       });
     }
 
-    // 💡 텍스트형 깔끔한 스코어보드 & 카테고리 필터링 렌더링
     function renderAllHistory() {
       const container = document.getElementById('container-history');
       container.innerHTML = '';
@@ -520,8 +516,8 @@
         let p1 = h.p1_name || h.p1 || h.팀1 || h.팀1명 || '팀 A';
         let p2 = h.p2_name || h.p2 || h.팀2 || h.팀2명 || '팀 B';
         
-        let p1RaceInfo = getRaceColor(p1, h.p1_race);
-        let p2RaceInfo = getRaceColor(p2, h.p2_race);
+        let p1Icon = getRaceIconOnly(p1, h.p1_race);
+        let p2Icon = getRaceIconOnly(p2, h.p2_race);
 
         let rawS1 = h.p1_score !== undefined && h.p1_score !== '' ? h.p1_score : (h.p1점수 !== undefined ? h.p1점수 : null);
         let rawS2 = h.p2_score !== undefined && h.p2_score !== '' ? h.p2_score : (h.p2점수 !== undefined ? h.p2점수 : null);
@@ -531,26 +527,28 @@
         let scoreHTML = '';
 
         if (hasScore) {
-          let s1 = parseInt(rawS1);
-          let s2 = parseInt(rawS2);
+          let s1 = parseInt(String(rawS1).trim(), 10) || 0;
+          let s2 = parseInt(String(rawS2).trim(), 10) || 0;
 
-          // 💡 게이지 바 제거 및 텍스트형 스코어보드 구현
+          let isP1Win = s1 > s2;
+          let isP2Win = s2 > s1;
+
           scoreHTML = `
             <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800 flex items-center justify-between text-sm sm:text-base font-bold">
-              <div class="flex-1 text-right truncate pr-4 ${p1RaceInfo.textClass} flex items-center justify-end gap-2">
-                ${p1RaceInfo.icon ? `<img src="${p1RaceInfo.icon}" class="w-4 h-4 object-contain">` : ''} 
+              <div class="flex-1 text-right truncate pr-4 text-white flex items-center justify-end gap-2">
+                ${p1Icon ? `<img src="${p1Icon}" class="w-4 h-4 object-contain">` : ''} 
                 <span class="truncate">${p1}</span>
               </div>
               
               <div class="px-5 py-1.5 bg-slate-800/90 rounded-xl border border-slate-700 text-white tracking-widest text-lg shadow-inner">
-                <span class="${p1 > p2 ? 'text-emerald-400 font-black' : ''}">${s1}</span> 
+                <span class="${isP1Win ? 'text-emerald-400 font-black' : ''}">${s1}</span> 
                 <span class="text-slate-500 mx-1">:</span> 
-                <span class="${s2 > s1 ? 'text-emerald-400 font-black' : ''}">${s2}</span>
+                <span class="${isP2Win ? 'text-emerald-400 font-black' : ''}">${s2}</span>
               </div>
 
-              <div class="flex-1 text-left truncate pl-4 ${p2RaceInfo.textClass} flex items-center justify-start gap-2">
+              <div class="flex-1 text-left truncate pl-4 text-white flex items-center justify-start gap-2">
                 <span class="truncate">${p2}</span>
-                ${p2RaceInfo.icon ? `<img src="${p2RaceInfo.icon}" class="w-4 h-4 object-contain">` : ''}
+                ${p2Icon ? `<img src="${p2Icon}" class="w-4 h-4 object-contain">` : ''}
               </div>
             </div>
           `;
@@ -558,7 +556,7 @@
           scoreHTML = `
             <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/60 text-xs text-slate-300">
               <i class="fa-solid fa-users text-emerald-400 mr-1.5"></i> <strong>진행 팀/참여:</strong> 
-              <span class="${p1RaceInfo.textClass}">${p1}</span> ${p2 ? 'vs <span class="' + p2RaceInfo.textClass + '">' + p2 + '</span>' : ''}
+              <span class="text-white">${p1}</span> ${p2 ? 'vs <span class="text-white">' + p2 + '</span>' : ''}
             </div>
           `;
         }
@@ -573,8 +571,8 @@
           
           const winner = (s.winner || s.승리선수 || s.승자 || '').trim();
           
-          const sP1Color = getRaceColor(sP1, sP1Race);
-          const sP2Color = getRaceColor(sP2, sP2Race);
+          const sP1Icon = getRaceIconOnly(sP1, sP1Race);
+          const sP2Icon = getRaceIconOnly(sP2, sP2Race);
 
           const isP1Winner = winner && (sP1.includes(winner) || winner.includes(sP1));
           const isP2Winner = winner && (sP2.includes(winner) || winner.includes(sP2));
@@ -584,18 +582,18 @@
               <span class="text-slate-400 font-medium w-28">${setNum}세트 <span class="text-slate-500 text-[11px]">(${s.map || s.맵 || '투혼'})</span></span>
               
               <div class="flex-1 flex items-center justify-center gap-3">
-                <span class="${sP1Color.textClass} font-bold flex items-center gap-1 ${isP1Winner ? 'text-white scale-105' : 'opacity-60'}">
-                  ${sP1Color.icon ? `<img src="${sP1Color.icon}" class="w-3.5 h-3.5 object-contain">` : ''}
+                <span class="text-white font-bold flex items-center gap-1 ${isP1Winner ? 'scale-105' : 'opacity-60'}">
+                  ${sP1Icon ? `<img src="${sP1Icon}" class="w-3.5 h-3.5 object-contain">` : ''}
                   ${sP1 || '선수 미입력'}
                   ${isP1Winner ? `<span class="text-amber-400 text-[11px] ml-0.5">👑</span>` : ''}
                 </span>
 
                 <span class="text-slate-600 text-[10px] font-bold">VS</span>
 
-                <span class="${sP2Color.textClass} font-bold flex items-center gap-1 ${isP2Winner ? 'text-white scale-105' : 'opacity-60'}">
+                <span class="text-white font-bold flex items-center gap-1 ${isP2Winner ? 'scale-105' : 'opacity-60'}">
                   ${isP2Winner ? `<span class="text-amber-400 text-[11px] mr-0.5">👑</span>` : ''}
                   ${sP2 || '선수 미입력'}
-                  ${sP2Color.icon ? `<img src="${sP2Color.icon}" class="w-3.5 h-3.5 object-contain">` : ''}
+                  ${sP2Icon ? `<img src="${sP2Icon}" class="w-3.5 h-3.5 object-contain">` : ''}
                 </span>
               </div>
             </div>
@@ -624,7 +622,6 @@
       });
     }
 
-    // 💡 카테고리 필터링 전환 함수
     function filterHistory(category) {
       currentCategoryFilter = category;
 
@@ -641,6 +638,7 @@
       renderAllHistory();
     }
 
+    // 💡 캘린더 날짜별 일정 카드 내 member(참여멤버) 표시 연동 반영
     function renderCalendar() {
       const grid = document.getElementById('calendar-grid');
       grid.innerHTML = '';
@@ -677,17 +675,20 @@
           const originalTitle = e.title || e.일정내용 || e.내용 || '';
           const linkedTitle = convertMemberNameToLink(originalTitle);
           const timeVal = e.time || e.시간 || '';
+          const scheduleMember = (e.member || e.참여멤버 || '').trim();
+          const linkedScheduleMember = convertMemberNameToLink(scheduleMember);
 
           return `
-            <div class="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-[10px] p-1.5 rounded-md mt-1 leading-relaxed">
+            <div class="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-[10px] p-1.5 rounded-md mt-1 leading-relaxed space-y-0.5">
               ${timeVal ? `<strong class="text-emerald-400 block font-bold">${timeVal}</strong>` : ''}
-              ${linkedTitle}
+              <div>${linkedTitle}</div>
+              ${linkedScheduleMember ? `<div class="text-[9px] text-slate-400">참여: ${linkedScheduleMember}</div>` : ''}
             </div>
           `;
         }).join('');
 
         grid.innerHTML += `
-          <div class="h-24 bg-slate-900/60 p-2 rounded-xl border border-slate-800/60 flex flex-col justify-between overflow-hidden">
+          <div class="h-28 bg-slate-900/60 p-2 rounded-xl border border-slate-800/60 flex flex-col justify-between overflow-hidden">
             <span class="text-xs font-bold text-slate-400">${date}</span>
             <div class="overflow-y-auto flex-1">${eventBadges}</div>
           </div>
