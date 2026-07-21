@@ -25,13 +25,8 @@
 
     /* 종족별 전용 컬러 */
     .race-terran-text { color: #60a5fa !important; }
-    .race-terran-bg { background-color: #3b82f6 !important; }
-    
     .race-protoss-text { color: #f59e0b !important; }
-    .race-protoss-bg { background-color: #f59e0b !important; }
-    
     .race-zerg-text { color: #ef4444 !important; }
-    .race-zerg-bg { background-color: #ef4444 !important; }
   </style>
 </head>
 <body class="flex h-screen overflow-hidden">
@@ -73,9 +68,15 @@
   <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
     <header class="h-20 border-b border-slate-800/60 bg-slate-900/40 backdrop-blur-md px-6 flex items-center justify-between z-10">
       <h2 id="page-title" class="text-xl font-bold text-white">메인 대시보드</h2>
-      <span class="text-xs px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-medium flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-400"></span> 치지직 API 연동 정상
-      </span>
+      
+      <div class="flex items-center gap-3">
+        <button onclick="manualRefreshLive()" id="refresh-btn" class="px-3.5 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-medium flex items-center gap-2 transition shadow">
+          <i class="fa-solid fa-rotate-right" id="refresh-icon"></i> 라이브 새로고침
+        </button>
+        <span class="text-xs px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-medium hidden sm:flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span> API 연동 정상
+        </span>
+      </div>
     </header>
 
     <main class="flex-1 overflow-y-auto p-6 space-y-8">
@@ -89,8 +90,11 @@
       <!-- TAB 1: MAIN -->
       <div id="tab-main" class="tab-content space-y-8">
         <div class="space-y-4">
-          <h3 class="text-lg font-bold text-white flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span> 치지직 라이브 방송 현황
+          <h3 class="text-lg font-bold text-white flex items-center justify-between">
+            <span class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span> 치지직 라이브 방송 현황
+            </span>
+            <span id="last-sync-time" class="text-[11px] text-slate-500 font-normal"></span>
           </h3>
           <div id="live-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="col-span-full dash-card p-8 text-center text-slate-400 rounded-2xl">방송 데이터를 확인하는 중입니다...</div>
@@ -116,27 +120,17 @@
 
       <!-- TAB 3: HISTORY -->
       <div id="tab-history" class="tab-content hidden space-y-8">
+        <!-- 💡 컨텐츠 탭 카테고리 세분화 -->
         <div class="flex flex-wrap gap-2 pb-2 border-b border-slate-800">
           <button onclick="filterHistory('all')" id="hist-btn-all" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 transition">전체 보기</button>
-          <button onclick="filterHistory('match')" id="hist-btn-match" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">⚔️ 대전 및 정기모임 경기</button>
-          <button onclick="filterHistory('viewer')" id="hist-btn-viewer" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">🔥 스진동을 이겨라</button>
-          <button onclick="filterHistory('multigame')" id="hist-btn-multigame" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">🎮 종합게임 & 이벤트</button>
+          <button onclick="filterHistory('정기모임')" id="hist-btn-정기모임" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">📅 정기모임</button>
+          <button onclick="filterHistory('종족최강전')" id="hist-btn-종족최강전" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">⚔️ 종족최강전</button>
+          <button onclick="filterHistory('교체혈전')" id="hist-btn-교체혈전" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">🔥 교체혈전</button>
+          <button onclick="filterHistory('종합게임')" id="hist-btn-종합게임" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">🎮 종합게임</button>
+          <button onclick="filterHistory('기타')" id="hist-btn-기타" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">✨ 기타</button>
         </div>
 
-        <div id="section-hist-match" class="hist-section space-y-4">
-          <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-trophy text-amber-400"></i> 경기 및 모임 기록</h3>
-          <div id="container-hist-match" class="space-y-4"></div>
-        </div>
-
-        <div id="section-hist-viewer" class="hist-section space-y-4">
-          <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-fire text-red-500"></i> 스진동을 이겨라 (시청자 참여)</h3>
-          <div id="container-hist-viewer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-        </div>
-
-        <div id="section-hist-multigame" class="hist-section space-y-4">
-          <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-gamepad text-purple-400"></i> 종합게임 & 이벤트 합방</h3>
-          <div id="container-hist-multigame" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-        </div>
+        <div id="container-history" class="space-y-4"></div>
       </div>
 
       <!-- TAB 4: CALENDAR -->
@@ -168,10 +162,18 @@
       protoss: "https://cdn.discordapp.com/attachments/1528721011732643951/1528793444435099648/WrK9L73w0c_CY7HVAOuXzdRg4yS7OBrMXtBIs1qEGHnPZPTeH7N8t1Mzb8sIRkcSkLSi0v47wBiONdp35r10WIE-tmRf8d4EN2gUaMBVgOR0OYFJj_kPILzCITBFwL6SMK05jX0r1pnJiNIp2t5PjQ.webp?ex=6a5f9758&is=6a5e45d8&hm=63492a3a94779f80643e3c3f5a1f546e5df60b4da678e33ae2b9e260b58b76c2&"
     };
 
-    let db = { members: [], schedules: [], historyMatch: [], details: [], historyViewer: [], historyMultiGame: [] };
+    let db = { members: [], schedules: [], historyMatch: [], details: [] };
+    let currentCategoryFilter = 'all';
     let currentCalDate = new Date();
 
-    window.addEventListener('DOMContentLoaded', loadData);
+    window.addEventListener('DOMContentLoaded', () => {
+      loadData();
+      setInterval(() => {
+        if (db.members.length > 0) {
+          checkChzzkLive();
+        }
+      }, 60000);
+    });
 
     async function loadData() {
       const fetchCSV = (sheet) => new Promise(res => {
@@ -185,8 +187,6 @@
         db.schedules = await fetchCSV('Schedules');
         db.historyMatch = await fetchCSV('Contents_History');
         db.details = await fetchCSV('Match_Details');
-        db.historyViewer = await fetchCSV('History_Viewer');
-        db.historyMultiGame = await fetchCSV('History_MultiGame');
 
         renderMembers();
         renderWeeklyWidget();
@@ -196,28 +196,37 @@
       } catch (e) { console.error("Data Load Error:", e); }
     }
 
+    async function manualRefreshLive() {
+      const icon = document.getElementById('refresh-icon');
+      icon.classList.add('fa-spin');
+      await checkChzzkLive();
+      setTimeout(() => {
+        icon.classList.remove('fa-spin');
+      }, 600);
+    }
+
     function getRaceColor(text, explicitRace) {
       const raceStr = String(explicitRace || text || '').toLowerCase();
 
       if (raceStr.includes('테란') || raceStr.includes('terran') || raceStr === 't') {
-        return { textClass: 'race-terran-text', bgClass: 'race-terran-bg', icon: RACE_ICONS.terran };
+        return { textClass: 'race-terran-text', icon: RACE_ICONS.terran };
       }
       if (raceStr.includes('프로토스') || raceStr.includes('토스') || raceStr.includes('protoss') || raceStr === 'p') {
-        return { textClass: 'race-protoss-text', bgClass: 'race-protoss-bg', icon: RACE_ICONS.protoss };
+        return { textClass: 'race-protoss-text', icon: RACE_ICONS.protoss };
       }
       if (raceStr.includes('저그') || raceStr.includes('zerg') || raceStr === 'z') {
-        return { textClass: 'race-zerg-text', bgClass: 'race-zerg-bg', icon: RACE_ICONS.zerg };
+        return { textClass: 'race-zerg-text', icon: RACE_ICONS.zerg };
       }
 
       const matchedMember = db.members.find(m => (m.name || m.이름 || '').trim() === String(text).trim());
       if (matchedMember) {
         const race = (matchedMember.race || matchedMember.종족 || '').trim();
-        if (race === '테란') return { textClass: 'race-terran-text', bgClass: 'race-terran-bg', icon: RACE_ICONS.terran };
-        if (race === '프로토스') return { textClass: 'race-protoss-text', bgClass: 'race-protoss-bg', icon: RACE_ICONS.protoss };
-        if (race === '저그') return { textClass: 'race-zerg-text', bgClass: 'race-zerg-bg', icon: RACE_ICONS.zerg };
+        if (race === '테란') return { textClass: 'race-terran-text', icon: RACE_ICONS.terran };
+        if (race === '프로토스') return { textClass: 'race-protoss-text', icon: RACE_ICONS.protoss };
+        if (race === '저그') return { textClass: 'race-zerg-text', icon: RACE_ICONS.zerg };
       }
 
-      return { textClass: 'text-emerald-400', bgClass: 'bg-emerald-500', icon: '' };
+      return { textClass: 'text-emerald-400', icon: '' };
     }
 
     function convertMemberNameToLink(text) {
@@ -267,9 +276,9 @@
       container.innerHTML = '';
 
       const races = [
+        { name: '프로토스', color: 'race-protoss-text', border: 'border-amber-500/50', badgeBg: 'bg-amber-500/10 text-amber-400 border-amber-500/30', icon: RACE_ICONS.protoss },
         { name: '테란', color: 'race-terran-text', border: 'border-blue-500/50', badgeBg: 'bg-blue-500/10 text-blue-400 border-blue-500/30', icon: RACE_ICONS.terran },
-        { name: '저그', color: 'race-zerg-text', border: 'border-red-500/50', badgeBg: 'bg-red-500/10 text-red-400 border-red-500/30', icon: RACE_ICONS.zerg },
-        { name: '프로토스', color: 'race-protoss-text', border: 'border-amber-500/50', badgeBg: 'bg-amber-500/10 text-amber-400 border-amber-500/30', icon: RACE_ICONS.protoss }
+        { name: '저그', color: 'race-zerg-text', border: 'border-red-500/50', badgeBg: 'bg-red-500/10 text-red-400 border-red-500/30', icon: RACE_ICONS.zerg }
       ];
 
       races.forEach(r => {
@@ -326,11 +335,13 @@
       });
     }
 
-    // 💡 치지직 라이브 완전 자동 감지 (프로필사진 + 이름 + 실시간 라이브제목 + 시청하기)
     async function checkChzzkLive() {
       const grid = document.getElementById('live-grid');
-      grid.innerHTML = '';
       let liveCount = 0;
+
+      grid.innerHTML = `<div class="col-span-full dash-card p-6 text-center text-slate-400 rounded-2xl border border-slate-800 text-xs animate-pulse">라이브 방송을 검색 중입니다...</div>`;
+
+      let tempHTML = '';
 
       for (let m of db.members) {
         let chzzkId = (m.chzzk_id || m.channel_id || m.chzzkId || (m.방송국링크 ? m.방송국링크.split('/').pop() : '') || '').trim();
@@ -343,7 +354,6 @@
         if (!chzzkId) continue;
 
         const timestamp = new Date().getTime();
-        // 상세 라이브 정보를 파싱하기 위한 엔드포인트
         const targetApi = `https://api.chzzk.naver.com/service/v1/channels/${chzzkId}/live-detail?_t=${timestamp}`;
 
         const proxyCandidates = [
@@ -368,12 +378,11 @@
           }
         }
 
-        // status === 'OPEN' 체크
         if (liveData && liveData.status === 'OPEN') {
           liveCount++;
           const liveTitle = liveData.liveTitle || '라이브 방송 중';
 
-          grid.innerHTML += `
+          tempHTML += `
             <div class="dash-card p-5 rounded-2xl border-l-4 border-l-red-500 flex flex-col justify-between hover:border-red-400 transition shadow-lg">
               <div>
                 <div class="flex items-center justify-between mb-3">
@@ -403,7 +412,13 @@
         }
       }
 
-      if (liveCount === 0) {
+      const nowTime = new Date().toLocaleTimeString();
+      const syncText = document.getElementById('last-sync-time');
+      if(syncText) syncText.innerText = `마지막 갱신: ${nowTime}`;
+
+      if (liveCount > 0) {
+        grid.innerHTML = tempHTML;
+      } else {
         grid.innerHTML = `
           <div class="col-span-full dash-card p-8 text-center text-slate-400 rounded-2xl border border-slate-800">
             <i class="fa-solid fa-headset text-2xl text-slate-600 mb-2 block"></i>
@@ -480,11 +495,23 @@
       });
     }
 
+    // 💡 텍스트형 깔끔한 스코어보드 & 카테고리 필터링 렌더링
     function renderAllHistory() {
-      const matchContainer = document.getElementById('container-hist-match');
-      matchContainer.innerHTML = '';
+      const container = document.getElementById('container-history');
+      container.innerHTML = '';
 
-      db.historyMatch.forEach(h => {
+      const filtered = db.historyMatch.filter(h => {
+        const cat = String(h.category || h.카테고리 || '').trim();
+        if (currentCategoryFilter === 'all') return true;
+        return cat === currentCategoryFilter;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="dash-card p-8 text-center text-slate-400 rounded-2xl border border-slate-800 text-xs">해당 카테고리의 컨텐츠 기록이 없습니다.</div>`;
+        return;
+      }
+
+      filtered.forEach(h => {
         const matchId = String(h.match_id || h.매치구분 || h.ID || '').trim();
         if (!matchId) return;
 
@@ -506,23 +533,24 @@
         if (hasScore) {
           let s1 = parseInt(rawS1);
           let s2 = parseInt(rawS2);
-          let total = (s1 + s2) || 1;
-          let p1Pct = Math.round((s1 / total) * 100);
-          let p2Pct = 100 - p1Pct;
 
+          // 💡 게이지 바 제거 및 텍스트형 스코어보드 구현
           scoreHTML = `
-            <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800/80 space-y-2">
-              <div class="flex justify-between items-center font-bold text-sm">
-                <span class="${p1RaceInfo.textClass} flex items-center gap-1.5">
-                  ${p1RaceInfo.icon ? `<img src="${p1RaceInfo.icon}" class="w-4 h-4 object-contain">` : ''} ${p1} (${s1})
-                </span>
-                <span class="${p2RaceInfo.textClass} flex items-center gap-1.5">
-                  (${s2}) ${p2} ${p2RaceInfo.icon ? `<img src="${p2RaceInfo.icon}" class="w-4 h-4 object-contain">` : ''}
-                </span>
+            <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800 flex items-center justify-between text-sm sm:text-base font-bold">
+              <div class="flex-1 text-right truncate pr-4 ${p1RaceInfo.textClass} flex items-center justify-end gap-2">
+                ${p1RaceInfo.icon ? `<img src="${p1RaceInfo.icon}" class="w-4 h-4 object-contain">` : ''} 
+                <span class="truncate">${p1}</span>
               </div>
-              <div class="h-2.5 w-full bg-slate-800 rounded-full overflow-hidden flex">
-                <div style="width: ${p1Pct}%" class="${p1RaceInfo.bgClass} h-full"></div>
-                <div style="width: ${p2Pct}%" class="${p2RaceInfo.bgClass} h-full"></div>
+              
+              <div class="px-5 py-1.5 bg-slate-800/90 rounded-xl border border-slate-700 text-white tracking-widest text-lg shadow-inner">
+                <span class="${p1 > p2 ? 'text-emerald-400 font-black' : ''}">${s1}</span> 
+                <span class="text-slate-500 mx-1">:</span> 
+                <span class="${s2 > s1 ? 'text-emerald-400 font-black' : ''}">${s2}</span>
+              </div>
+
+              <div class="flex-1 text-left truncate pl-4 ${p2RaceInfo.textClass} flex items-center justify-start gap-2">
+                <span class="truncate">${p2}</span>
+                ${p2RaceInfo.icon ? `<img src="${p2RaceInfo.icon}" class="w-4 h-4 object-contain">` : ''}
               </div>
             </div>
           `;
@@ -574,7 +602,7 @@
           `;
         }).join('');
 
-        matchContainer.innerHTML += `
+        container.innerHTML += `
           <div class="dash-card p-6 rounded-2xl space-y-4">
             <div class="flex justify-between items-center text-xs text-slate-400">
               <span class="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-emerald-400 font-bold">${h.category || h.카테고리 || '정기모임'}</span>
@@ -594,61 +622,12 @@
           </div>
         `;
       });
-
-      // 2. 스진동을 이겨라
-      const viewerContainer = document.getElementById('container-hist-viewer');
-      viewerContainer.innerHTML = '';
-      db.historyViewer.forEach(v => {
-        const title = v.title || v.제목 || v.회차;
-        if (!title) return;
-        const linkedMembers = convertMemberNameToLink(v.members || v.참여멤버 || '');
-        const imgUrl = v.img || v.대표이미지 || 'https://via.placeholder.com/300x160?text=스진동을+이겨라';
-
-        viewerContainer.innerHTML += `
-          <div class="dash-card p-5 rounded-2xl flex flex-col justify-between space-y-4">
-            <div class="space-y-3">
-              <div class="flex justify-between items-start">
-                <span class="text-xs px-2.5 py-1 rounded-full bg-red-950 text-red-400 border border-red-800 font-bold">🔥 스진동을 이겨라</span>
-                <span class="text-xs text-slate-400">${v.date || v.날짜 || ''} (${v.진행요일 || '토'})</span>
-              </div>
-              <h4 class="text-base font-bold text-white">${title}</h4>
-              <img src="${imgUrl}" class="w-full h-40 object-cover rounded-xl border border-slate-800">
-              <p class="text-xs text-slate-300 leading-relaxed">${v.description || v.설명 || ''}</p>
-              <div class="text-xs text-slate-400"><strong>참여 멤버:</strong> ${linkedMembers || '멤버 전원'}</div>
-            </div>
-            ${v.vod_url || v.VOD_URL ? `<a href="${v.vod_url || v.VOD_URL}" target="_blank" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold text-xs rounded-xl text-center border border-slate-700 flex items-center justify-center gap-2"><i class="fa-solid fa-play"></i> VOD 다시보기</a>` : ''}
-          </div>
-        `;
-      });
-
-      // 3. 종합게임 & 이벤트
-      const multiContainer = document.getElementById('container-hist-multigame');
-      multiContainer.innerHTML = '';
-      db.historyMultiGame.forEach(g => {
-        const title = g.title || g.게임명 || g.제목;
-        if (!title) return;
-        const linkedMembers = convertMemberNameToLink(g.members || g.참여멤버 || '');
-        const imgUrl = g.img || g.대표이미지 || 'https://via.placeholder.com/300x160?text=종합게임';
-
-        multiContainer.innerHTML += `
-          <div class="dash-card p-5 rounded-2xl flex flex-col justify-between space-y-4">
-            <div class="space-y-3">
-              <div class="flex justify-between items-start">
-                <span class="text-xs px-2.5 py-1 rounded-full bg-purple-950 text-purple-400 border border-purple-800 font-bold">🎮 종합게임</span>
-                <span class="text-xs text-slate-400">${g.date || g.날짜 || ''} (${g.진행요일 || '일'})</span>
-              </div>
-              <h4 class="text-base font-bold text-white">${title}</h4>
-              <img src="${imgUrl}" class="w-full h-40 object-cover rounded-xl border border-slate-800">
-              <p class="text-xs text-slate-300 leading-relaxed">${g.description || g.설명 || ''}</p>
-              <div class="text-xs text-slate-400"><strong>참여 멤버:</strong> ${linkedMembers || '멤버 전원'}</div>
-            </div>
-            ${g.vod_url || v.VOD_URL ? `<a href="${g.vod_url || g.VOD_URL}" target="_blank" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-purple-400 font-bold text-xs rounded-xl text-center border border-slate-700 flex items-center justify-center gap-2"><i class="fa-solid fa-play"></i> VOD 다시보기</a>` : ''}
-          </div>
-        `;
-      });
     }
 
+    // 💡 카테고리 필터링 전환 함수
     function filterHistory(category) {
+      currentCategoryFilter = category;
+
       document.querySelectorAll('.hist-filter-btn').forEach(btn => {
         btn.classList.remove('bg-emerald-500', 'text-slate-950');
         btn.classList.add('bg-slate-800', 'text-slate-300');
@@ -659,18 +638,7 @@
         activeBtn.classList.add('bg-emerald-500', 'text-slate-950');
       }
 
-      document.querySelectorAll('.hist-section').forEach(sec => sec.classList.remove('hidden'));
-
-      if (category === 'match') {
-        document.getElementById('section-hist-viewer').classList.add('hidden');
-        document.getElementById('section-hist-multigame').classList.add('hidden');
-      } else if (category === 'viewer') {
-        document.getElementById('section-hist-match').classList.add('hidden');
-        document.getElementById('section-hist-multigame').classList.add('hidden');
-      } else if (category === 'multigame') {
-        document.getElementById('section-hist-match').classList.add('hidden');
-        document.getElementById('section-hist-viewer').classList.add('hidden');
-      }
+      renderAllHistory();
     }
 
     function renderCalendar() {
