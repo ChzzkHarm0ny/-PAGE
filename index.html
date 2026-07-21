@@ -206,11 +206,10 @@
         renderAllHistory();
         renderWeeklyYoutube();
         renderCalendar();
-        renderLiveStatusFromSheet(); // 💡 스프레드시트 기반 방송 상태 렌더링
+        renderLiveStatusFromSheet();
       } catch (e) { console.error("Data Load Error:", e); }
     }
 
-    // 💡 스프레드시트의 is_live 및 live_title 값을 읽어와 메인 대시보드에 렌더링
     function renderLiveStatusFromSheet() {
       const grid = document.getElementById('live-grid');
       let liveCount = 0;
@@ -225,10 +224,9 @@
 
         const profileImg = m.profile_img || m.프로필사진 || 'https://via.placeholder.com/80';
         
-        // is_live 값 확인 (TRUE, true, 'TRUE', '1' 등 대응)
-        const isLiveRaw = String(m.is_live || m.방송중 || '').trim().toLowerCase();
-        const isLive = (isLiveRaw === 'true' || isLiveRaw === '1' || isLiveRaw === 'yes');
-        const liveTitle = m.live_title || m.방송제목 || '라이브 방송 중';
+        const isLiveRaw = String(m.is_live || m.IS_LIVE || m.방송중 || m['is live'] || '').trim().toUpperCase();
+        const isLive = (isLiveRaw === 'TRUE' || isLiveRaw === 'TRUE' || isLiveRaw === '1' || isLiveRaw === 'YES' || isLiveRaw === 'T');
+        const liveTitle = m.live_title || m.LIVE_TITLE || m.방송제목 || m['live title'] || '라이브 방송 중';
 
         if (isLive && chzzkId) {
           liveCount++;
@@ -257,7 +255,7 @@
                  class="w-full mt-2 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl text-center flex items-center justify-center gap-1.5 transition">
                 <i class="fa-solid fa-play text-[10px]"></i> 라이브 방송 시청하기
               </a>
-          </div>
+            </div>
           `;
         }
       });
@@ -662,16 +660,16 @@
             ${description ? `
               <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 text-xs text-slate-200 leading-relaxed">
                 <i class="fa-solid fa-gamepad text-purple-400 mr-2"></i>${description}
-            </div>
-          ` : ''}
+              </div>
+            ` : ''}
 
             ${linkedMembers ? `
               <div class="text-xs text-slate-400 pt-2 border-t border-slate-800/80 space-y-1">
                 <strong class="text-slate-300 block mb-1">참여 멤버</strong>
                 <div class="flex flex-wrap gap-1">${linkedMembers}</div>
-            </div>
-          ` : ''}
-        </div>
+              </div>
+            ` : ''}
+          </div>
         `;
       }).join('');
 
