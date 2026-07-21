@@ -22,6 +22,16 @@
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #0b0f19; }
     ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+
+    /* 종족별 전용 컬러 */
+    .race-terran-text { color: #60a5fa !important; }
+    .race-terran-bg { background-color: #3b82f6 !important; }
+    
+    .race-protoss-text { color: #f59e0b !important; }
+    .race-protoss-bg { background-color: #f59e0b !important; }
+    
+    .race-zerg-text { color: #ef4444 !important; }
+    .race-zerg-bg { background-color: #ef4444 !important; }
   </style>
 </head>
 <body class="flex h-screen overflow-hidden">
@@ -70,7 +80,7 @@
 
     <main class="flex-1 overflow-y-auto p-6 space-y-8">
 
-      <!-- BANNER HERO (메인 탭 전용) -->
+      <!-- BANNER HERO -->
       <div id="hero-banner" class="w-full dash-card p-4 sm:p-6 rounded-2xl flex items-center justify-center overflow-hidden">
         <img src="https://cdn.discordapp.com/attachments/1503357186917797978/1528363789991280702/20251231.png?ex=6a600173&is=6a5eaff3&hm=5f5a3dc2f42984b1f5394ba24f832afee82e41418020230878f38ab357e85da9&" 
              alt="스진동 메인 타이틀" class="w-full max-w-4xl h-auto object-contain filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]">
@@ -106,8 +116,6 @@
 
       <!-- TAB 3: HISTORY -->
       <div id="tab-history" class="tab-content hidden space-y-8">
-        
-        <!-- Filter Buttons -->
         <div class="flex flex-wrap gap-2 pb-2 border-b border-slate-800">
           <button onclick="filterHistory('all')" id="hist-btn-all" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 transition">전체 보기</button>
           <button onclick="filterHistory('match')" id="hist-btn-match" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">⚔️ 대전 및 정기모임 경기</button>
@@ -115,24 +123,20 @@
           <button onclick="filterHistory('multigame')" id="hist-btn-multigame" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">🎮 종합게임 & 이벤트</button>
         </div>
 
-        <!-- Match / Gathering Section -->
         <div id="section-hist-match" class="hist-section space-y-4">
           <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-trophy text-amber-400"></i> 경기 및 모임 기록</h3>
           <div id="container-hist-match" class="space-y-4"></div>
         </div>
 
-        <!-- Viewer Section -->
         <div id="section-hist-viewer" class="hist-section space-y-4">
           <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-fire text-red-500"></i> 스진동을 이겨라 (시청자 참여)</h3>
           <div id="container-hist-viewer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
         </div>
 
-        <!-- MultiGame Section -->
         <div id="section-hist-multigame" class="hist-section space-y-4">
           <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-gamepad text-purple-400"></i> 종합게임 & 이벤트 합방</h3>
           <div id="container-hist-multigame" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
         </div>
-
       </div>
 
       <!-- TAB 4: CALENDAR -->
@@ -157,6 +161,13 @@
 
   <script>
     const SPREADSHEET_ID = "1mBhZxpmt7xw8fC37cRjSaVQBSQkPXdskJNK9u1Zg_Co";
+    
+    const RACE_ICONS = {
+      terran: "https://cdn.discordapp.com/attachments/1528721011732643951/1528793445269770421/qtPQWR_1fiy6ly6NbndO9Sp-CA73mBjJ52ZtZGwQj1Ozo9FlQOeTV5pjtS3UKrA-_4qCiNLGr3_rgpklZ1HSJCk-0kw5lxqO-VCVHEvGo6jDv60hOCVhzX4Kcun7dxbwK73isQF0cBHi3qjeHDct5w.webp?ex=6a5f9758&is=6a5e45d8&hm=e3199aaefab4395ddca0983c8738bee5bf7c491b6ff3c456a437ce3d9913ad5f&",
+      zerg: "https://cdn.discordapp.com/attachments/1528721011732643951/1528793444846403715/vkWLywILixMzHkg83QumKeJR3YPhDMGdAZtjbJ2SBLPOQCHgpqcbXRCRyudHo-3nP5AYQEkKIJFncVwYoOjG4AHdeJ-dcwc1uwhiR90LsKIfDy6If7-s5EhI2xI59o0Vkchd9PNFAOFM_CQamYXFXQ.webp?ex=6a5f9758&is=6a5e45d8&hm=dd0ba630755f7d54b893c5e17412f56f4dcea5c06e69d6f970aaa4dfdacd4c3f&",
+      protoss: "https://cdn.discordapp.com/attachments/1528721011732643951/1528793444435099648/WrK9L73w0c_CY7HVAOuXzdRg4yS7OBrMXtBIs1qEGHnPZPTeH7N8t1Mzb8sIRkcSkLSi0v47wBiONdp35r10WIE-tmRf8d4EN2gUaMBVgOR0OYFJj_kPILzCITBFwL6SMK05jX0r1pnJiNIp2t5PjQ.webp?ex=6a5f9758&is=6a5e45d8&hm=63492a3a94779f80643e3c3f5a1f546e5df60b4da678e33ae2b9e260b58b76c2&"
+    };
+
     let db = { members: [], schedules: [], historyMatch: [], details: [], historyViewer: [], historyMultiGame: [] };
     let currentCalDate = new Date(2026, 7, 1);
 
@@ -165,7 +176,7 @@
     async function loadData() {
       const fetchCSV = (sheet) => new Promise(res => {
         Papa.parse(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${sheet}`, {
-          download: true, header: true, complete: r => res(r.data)
+          download: true, header: true, skipEmptyLines: true, complete: r => res(r.data)
         });
       });
 
@@ -185,13 +196,38 @@
       } catch (e) { console.error("Data Load Error:", e); }
     }
 
+    function getRaceColor(text) {
+      if (!text) return { textClass: 'text-slate-300', bgClass: 'bg-emerald-500', icon: '' };
+      const str = String(text).toLowerCase();
+
+      if (str.includes('테란') || str.includes('terran')) {
+        return { textClass: 'race-terran-text', bgClass: 'race-terran-bg', icon: RACE_ICONS.terran };
+      }
+      if (str.includes('프로토스') || str.includes('토스') || str.includes('protoss')) {
+        return { textClass: 'race-protoss-text', bgClass: 'race-protoss-bg', icon: RACE_ICONS.protoss };
+      }
+      if (str.includes('저그') || str.includes('zerg')) {
+        return { textClass: 'race-zerg-text', bgClass: 'race-zerg-bg', icon: RACE_ICONS.zerg };
+      }
+
+      const matchedMember = db.members.find(m => (m.name || m.이름 || '').trim() === str.trim());
+      if (matchedMember) {
+        const race = (matchedMember.race || matchedMember.종족 || '').trim();
+        if (race === '테란') return { textClass: 'race-terran-text', bgClass: 'race-terran-bg', icon: RACE_ICONS.terran };
+        if (race === '프로토스') return { textClass: 'race-protoss-text', bgClass: 'race-protoss-bg', icon: RACE_ICONS.protoss };
+        if (race === '저그') return { textClass: 'race-zerg-text', bgClass: 'race-zerg-bg', icon: RACE_ICONS.zerg };
+      }
+
+      return { textClass: 'text-emerald-400', bgClass: 'bg-emerald-500', icon: '' };
+    }
+
     function convertMemberNameToLink(text) {
       if (!text) return '';
-      let resultText = text;
+      let resultText = String(text);
 
       db.members.forEach(m => {
-        const name = m.name || m.이름;
-        const chzzkId = m.chzzk_id || (m.방송국링크 ? m.방송국링크.split('/').pop() : '');
+        const name = (m.name || m.이름 || '').trim();
+        const chzzkId = (m.chzzk_id || (m.방송국링크 ? m.방송국링크.split('/').pop() : '') || '').trim();
 
         if (name && chzzkId && resultText.includes(name)) {
           const linkHTML = `<a href="https://chzzk.naver.com/${chzzkId}" target="_blank" class="inline-flex items-center gap-1 font-bold text-emerald-400 hover:text-emerald-300 hover:underline bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-800/80 my-0.5" onclick="event.stopPropagation();"><i class="fa-solid fa-tv text-[10px]"></i> ${name}</a>`;
@@ -230,18 +266,18 @@
       container.innerHTML = '';
 
       const races = [
-        { name: '테란', color: 'text-blue-400', border: 'border-blue-500/50', badgeBg: 'bg-blue-500/10 text-blue-400 border-blue-500/30' },
-        { name: '저그', color: 'text-purple-400', border: 'border-purple-500/50', badgeBg: 'bg-purple-500/10 text-purple-400 border-purple-500/30' },
-        { name: '프로토스', color: 'text-amber-400', border: 'border-amber-500/50', badgeBg: 'bg-amber-500/10 text-amber-400 border-amber-500/30' }
+        { name: '테란', color: 'race-terran-text', border: 'border-blue-500/50', badgeBg: 'bg-blue-500/10 text-blue-400 border-blue-500/30', icon: RACE_ICONS.terran },
+        { name: '저그', color: 'race-zerg-text', border: 'border-red-500/50', badgeBg: 'bg-red-500/10 text-red-400 border-red-500/30', icon: RACE_ICONS.zerg },
+        { name: '프로토스', color: 'race-protoss-text', border: 'border-amber-500/50', badgeBg: 'bg-amber-500/10 text-amber-400 border-amber-500/30', icon: RACE_ICONS.protoss }
       ];
 
       races.forEach(r => {
-        const matchedMembers = db.members.filter(m => (m.race || m.종족) === r.name);
+        const matchedMembers = db.members.filter(m => (m.race || m.종족 || '').trim() === r.name);
         if (matchedMembers.length === 0) return;
 
         let memberCardsHTML = matchedMembers.map(m => {
-          const name = m.name || m.이름;
-          const chzzkId = m.chzzk_id || (m.방송국링크 ? m.방송국링크.split('/').pop() : '');
+          const name = (m.name || m.이름 || '').trim();
+          const chzzkId = (m.chzzk_id || (m.방송국링크 ? m.방송국링크.split('/').pop() : '') || '').trim();
 
           let roleBadgeHTML = '';
           if (name === '망시') {
@@ -255,7 +291,9 @@
               <div>
                 <div class="flex items-start justify-between mb-3">
                   <img src="${m.profile_img || m.프로필사진 || 'https://via.placeholder.com/80'}" class="w-16 h-16 rounded-2xl object-cover border-2 ${r.border} shadow-lg">
-                  <span class="text-xs px-2.5 py-1 rounded-full border ${r.badgeBg} font-bold">${r.name}</span>
+                  <span class="text-xs px-2.5 py-1 rounded-full border ${r.badgeBg} font-bold flex items-center gap-1.5">
+                    <img src="${r.icon}" class="w-4 h-4 object-contain"> ${r.name}
+                  </span>
                 </div>
                 <div class="space-y-1 mb-4">
                   <div class="flex items-center gap-2 flex-wrap">
@@ -276,7 +314,7 @@
         container.innerHTML += `
           <div class="space-y-4">
             <h3 class="text-lg font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
-              <span class="w-2.5 h-2.5 rounded-full ${r.color.replace('text', 'bg')}"></span>
+              <img src="${r.icon}" class="w-6 h-6 object-contain">
               <span class="${r.color}">${r.name}</span> (${matchedMembers.length}명)
             </h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -293,8 +331,8 @@
       let liveCount = 0;
 
       for (let m of db.members) {
-        const chzzkId = m.chzzk_id || (m.방송국링크 ? m.방송국링크.split('/').pop() : '');
-        const name = m.name || m.이름;
+        const chzzkId = (m.chzzk_id || (m.방송국링크 ? m.방송국링크.split('/').pop() : '') || '').trim();
+        const name = (m.name || m.이름 || '').trim();
         if (!chzzkId) continue;
 
         try {
@@ -353,12 +391,12 @@
         const formattedTargetDate = `${year}-${month}-${dateNum}`;
 
         const matches = db.schedules.filter(s => {
-          const dateStr = s.날짜 || s.date || '';
-          const dayStr = s.요일 || s.day || '';
+          const dateStr = String(s.날짜 || s.date || '');
+          const dayStr = String(s.요일 || s.day || '');
 
           if (dateStr.includes(formattedTargetDate)) return true;
 
-          const cleanDateStr = dateStr.replace(/년|월/g, '-').replace(/일|\s/g, '');
+          const cleanDateStr = dateStr.replace(/년|월|\./g, '-').replace(/일|\s/g, '');
           const targetShortStr = `${month}-${dateNum}`;
           
           if (cleanDateStr.includes(targetShortStr) && (dayStr.includes(d) || dateStr.includes(d))) {
@@ -369,7 +407,7 @@
         });
 
         let eventsHTML = matches.map(m => {
-          const originalTitle = m.일정내용 || m.title || '';
+          const originalTitle = m.일정내용 || m.title || m.내용 || '';
           const linkedTitle = convertMemberNameToLink(originalTitle);
 
           return `
@@ -394,24 +432,27 @@
       });
     }
 
-    // --- 컨텐츠 기록 통합 렌더링 함수 ---
+    // --- 승자 👑 아이콘 직관적 표시 스코어보드 ---
     function renderAllHistory() {
-      // 1. 경기/모임 기록 (점수 유무에 따른 가변 스코어보드)
       const matchContainer = document.getElementById('container-hist-match');
       matchContainer.innerHTML = '';
 
       db.historyMatch.forEach(h => {
-        const matchId = h.매치구분 || h.match_id;
+        const matchId = String(h.매치구분 || h.match_id || h.ID || '').trim();
         if (!matchId) return;
 
-        const sets = db.details.filter(d => (d.매치구분 || d.match_id) === matchId);
+        const sets = db.details.filter(d => String(d.매치구분 || d.match_id || d.ID || '').trim().toLowerCase() === matchId.toLowerCase());
         
-        let p1 = h.p1 || '팀 A';
-        let p2 = h.p2 || '팀 B';
-        let rawS1 = h.p1점수 !== undefined && h.p1점수 !== '' ? h.p1점수 : null;
-        let rawS2 = h.p2점수 !== undefined && h.p2점수 !== '' ? h.p2점수 : null;
+        let p1 = h.p1 || h.팀1 || h.팀1명 || '팀 A';
+        let p2 = h.p2 || h.팀2 || h.팀2명 || '팀 B';
+        
+        let p1RaceInfo = getRaceColor(p1);
+        let p2RaceInfo = getRaceColor(p2);
 
-        const hasScore = rawS1 !== null && rawS2 !== null && !isNaN(parseInt(rawS1)) && !isNaN(parseInt(rawS2));
+        let rawS1 = h.p1점수 !== undefined && h.p1점수 !== '' ? h.p1점수 : (h.팀1점수 !== undefined ? h.팀1점수 : null);
+        let rawS2 = h.p2점수 !== undefined && h.p2점수 !== '' ? h.p2점수 : (h.팀2점수 !== undefined ? h.팀2점수 : null);
+
+        const hasScore = rawS1 !== null && rawS2 !== null && rawS1 !== '' && rawS2 !== '' && !isNaN(parseInt(rawS1)) && !isNaN(parseInt(rawS2));
 
         let scoreHTML = '';
 
@@ -424,40 +465,72 @@
 
           scoreHTML = `
             <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800/80 space-y-2">
-              <div class="flex justify-between font-bold text-sm">
-                <span class="${s1 > s2 ? 'text-emerald-400' : 'text-slate-300'}">${p1} (${s1})</span>
-                <span class="${s2 > s1 ? 'text-emerald-400' : 'text-slate-300'}">(${s2}) ${p2}</span>
+              <div class="flex justify-between items-center font-bold text-sm">
+                <span class="${p1RaceInfo.textClass} flex items-center gap-1.5">
+                  ${p1RaceInfo.icon ? `<img src="${p1RaceInfo.icon}" class="w-4 h-4 object-contain">` : ''} ${p1} (${s1})
+                </span>
+                <span class="${p2RaceInfo.textClass} flex items-center gap-1.5">
+                  (${s2}) ${p2} ${p2RaceInfo.icon ? `<img src="${p2RaceInfo.icon}" class="w-4 h-4 object-contain">` : ''}
+                </span>
               </div>
               <div class="h-2.5 w-full bg-slate-800 rounded-full overflow-hidden flex">
-                <div style="width: ${p1Pct}%" class="bg-emerald-500 h-full"></div>
-                <div style="width: ${p2Pct}%" class="bg-blue-500 h-full"></div>
+                <div style="width: ${p1Pct}%" class="${p1RaceInfo.bgClass} h-full"></div>
+                <div style="width: ${p2Pct}%" class="${p2RaceInfo.bgClass} h-full"></div>
               </div>
             </div>
           `;
         } else {
           scoreHTML = `
             <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/60 text-xs text-slate-300">
-              <i class="fa-solid fa-users text-emerald-400 mr-1.5"></i> <strong>진행 팀/참여:</strong> ${p1} ${p2 ? 'vs ' + p2 : ''}
+              <i class="fa-solid fa-users text-emerald-400 mr-1.5"></i> <strong>진행 팀/참여:</strong> 
+              <span class="${p1RaceInfo.textClass}">${p1}</span> ${p2 ? 'vs <span class="' + p2RaceInfo.textClass + '">' + p2 + '</span>' : ''}
             </div>
           `;
         }
 
-        let setsList = sets.map((s, i) => `
-          <div class="flex justify-between items-center py-1.5 border-b border-slate-800 text-xs">
-            <span class="text-slate-400">${i+1}세트 (${s.맵 || '투혼'})</span>
-            <span>${s.p1 || ''} vs ${s.p2 || ''}</span>
-            <span class="font-bold text-emerald-400">勝: ${s.승리선수 || '-'}</span>
-          </div>
-        `).join('');
+        // 💡 승자 👑 표시 개선 로직
+        let setsList = sets.map((s, i) => {
+          const sP1 = (s.p1 || s.팀1 || '').trim();
+          const sP2 = (s.p2 || s.팀2 || '').trim();
+          const winner = (s.승리선수 || s.승자 || '').trim();
+          
+          const sP1Color = getRaceColor(sP1);
+          const sP2Color = getRaceColor(sP2);
+
+          const isP1Winner = winner && (sP1.includes(winner) || winner.includes(sP1));
+          const isP2Winner = winner && (sP2.includes(winner) || winner.includes(sP2));
+
+          return `
+            <div class="flex justify-between items-center py-2 border-b border-slate-800/80 text-xs">
+              <span class="text-slate-400 font-medium w-24">${i+1}세트 <span class="text-slate-500 text-[11px]">(${s.맵 || s.map || '투혼'})</span></span>
+              
+              <div class="flex-1 flex items-center justify-center gap-3">
+                <span class="${sP1Color.textClass} font-bold flex items-center gap-1 ${isP1Winner ? 'text-white scale-105' : 'opacity-60'}">
+                  ${sP1Color.icon ? `<img src="${sP1Color.icon}" class="w-3.5 h-3.5 object-contain">` : ''}
+                  ${sP1}
+                  ${isP1Winner ? `<span class="text-amber-400 text-[11px] ml-0.5">👑</span>` : ''}
+                </span>
+
+                <span class="text-slate-600 text-[10px] font-bold">VS</span>
+
+                <span class="${sP2Color.textClass} font-bold flex items-center gap-1 ${isP2Winner ? 'text-white scale-105' : 'opacity-60'}">
+                  ${isP2Winner ? `<span class="text-amber-400 text-[11px] mr-0.5">👑</span>` : ''}
+                  ${sP2}
+                  ${sP2Color.icon ? `<img src="${sP2Color.icon}" class="w-3.5 h-3.5 object-contain">` : ''}
+                </span>
+              </div>
+            </div>
+          `;
+        }).join('');
 
         matchContainer.innerHTML += `
           <div class="dash-card p-6 rounded-2xl space-y-4">
             <div class="flex justify-between items-center text-xs text-slate-400">
-              <span class="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-emerald-400 font-bold">${h.카테고리 || '정기모임'}</span>
-              <span>${h.날짜 || ''}</span>
+              <span class="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-emerald-400 font-bold">${h.카테고리 || h.category || '정기모임'}</span>
+              <span>${h.날짜 || h.date || ''}</span>
             </div>
 
-            <h4 class="text-base font-bold text-white">${h.제목 || '모임 결과'}</h4>
+            <h4 class="text-base font-bold text-white">${h.제목 || h.title || '모임 결과'}</h4>
 
             ${scoreHTML}
 
@@ -475,7 +548,8 @@
       const viewerContainer = document.getElementById('container-hist-viewer');
       viewerContainer.innerHTML = '';
       db.historyViewer.forEach(v => {
-        if (!v.제목 && !v.title) return;
+        const title = v.제목 || v.title || v.회차;
+        if (!title) return;
         const linkedMembers = convertMemberNameToLink(v.참여멤버 || v.members || '');
         const imgUrl = v.대표이미지 || v.img || 'https://via.placeholder.com/300x160?text=스진동을+이겨라';
 
@@ -486,7 +560,7 @@
                 <span class="text-xs px-2.5 py-1 rounded-full bg-red-950 text-red-400 border border-red-800 font-bold">🔥 스진동을 이겨라</span>
                 <span class="text-xs text-slate-400">${v.날짜 || ''} (${v.진행요일 || '토'})</span>
               </div>
-              <h4 class="text-base font-bold text-white">${v.제목 || ''}</h4>
+              <h4 class="text-base font-bold text-white">${title}</h4>
               <img src="${imgUrl}" class="w-full h-40 object-cover rounded-xl border border-slate-800">
               <p class="text-xs text-slate-300 leading-relaxed">${v.설명 || ''}</p>
               <div class="text-xs text-slate-400"><strong>참여 멤버:</strong> ${linkedMembers || '멤버 전원'}</div>
@@ -500,7 +574,8 @@
       const multiContainer = document.getElementById('container-hist-multigame');
       multiContainer.innerHTML = '';
       db.historyMultiGame.forEach(g => {
-        if (!g.게임명 && !g.title) return;
+        const title = g.게임명 || g.title || g.제목;
+        if (!title) return;
         const linkedMembers = convertMemberNameToLink(g.참여멤버 || g.members || '');
         const imgUrl = g.대표이미지 || g.img || 'https://via.placeholder.com/300x160?text=종합게임';
 
@@ -511,7 +586,7 @@
                 <span class="text-xs px-2.5 py-1 rounded-full bg-purple-950 text-purple-400 border border-purple-800 font-bold">🎮 종합게임</span>
                 <span class="text-xs text-slate-400">${g.날짜 || ''} (${g.진행요일 || '일'})</span>
               </div>
-              <h4 class="text-base font-bold text-white">${g.게임명 || ''}</h4>
+              <h4 class="text-base font-bold text-white">${title}</h4>
               <img src="${imgUrl}" class="w-full h-40 object-cover rounded-xl border border-slate-800">
               <p class="text-xs text-slate-300 leading-relaxed">${g.설명 || ''}</p>
               <div class="text-xs text-slate-400"><strong>참여 멤버:</strong> ${linkedMembers || '멤버 전원'}</div>
@@ -564,12 +639,24 @@
 
       for(let date=1; date<=lastDate; date++) {
         const events = db.schedules.filter(s => {
-          const dateStr = s.날짜 || s.date || '';
-          return dateStr.includes(`${date}일`);
+          const rawDate = String(s.날짜 || s.date || '');
+          if (!rawDate) return false;
+
+          if (rawDate.includes(`${month + 1}월`) && rawDate.includes(`${date}일`)) return true;
+          if (rawDate.includes(`${date}일`) && !rawDate.includes('월')) return true;
+
+          const parts = rawDate.split(/[-.\/]/);
+          if (parts.length >= 3) {
+            const parsedM = parseInt(parts[1], 10);
+            const parsedD = parseInt(parts[2], 10);
+            if (parsedM === (month + 1) && parsedD === date) return true;
+          }
+
+          return false;
         });
 
         let eventBadges = events.map(e => {
-          const originalTitle = e.일정내용 || e.title || '';
+          const originalTitle = e.일정내용 || e.title || e.내용 || '';
           const linkedTitle = convertMemberNameToLink(originalTitle);
 
           return `
