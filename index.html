@@ -64,14 +64,14 @@
     <header class="h-20 border-b border-slate-800/60 bg-slate-900/40 backdrop-blur-md px-6 flex items-center justify-between z-10">
       <h2 id="page-title" class="text-xl font-bold text-white">메인 대시보드</h2>
       <span class="text-xs px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-medium flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-400"></span> 치지직 API 정상
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span> 치지직 API 연동 정상
       </span>
     </header>
 
     <main class="flex-1 overflow-y-auto p-6 space-y-8">
 
-      <!-- BANNER HERO -->
-      <div class="w-full dash-card p-4 sm:p-6 rounded-2xl flex items-center justify-center overflow-hidden">
+      <!-- BANNER HERO (메인 탭 전용) -->
+      <div id="hero-banner" class="w-full dash-card p-4 sm:p-6 rounded-2xl flex items-center justify-center overflow-hidden">
         <img src="https://cdn.discordapp.com/attachments/1503357186917797978/1528363789991280702/20251231.png?ex=6a600173&is=6a5eaff3&hm=5f5a3dc2f42984b1f5394ba24f832afee82e41418020230878f38ab357e85da9&" 
              alt="스진동 메인 타이틀" class="w-full max-w-4xl h-auto object-contain filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]">
       </div>
@@ -94,21 +94,45 @@
       </div>
 
       <!-- TAB 2: MEMBERS -->
-      <div id="tab-members" class="tab-content hidden space-y-6">
-        <div class="dash-card p-6 rounded-2xl">
-          <h3 class="text-lg font-bold text-white mb-2">동아리 소개</h3>
+      <div id="tab-members" class="tab-content hidden space-y-8">
+        <div class="dash-card p-6 rounded-2xl border-l-4 border-l-emerald-500">
+          <h3 class="text-xl font-bold text-white mb-2">동아리 소개</h3>
           <p class="text-sm text-slate-300 leading-relaxed">
             치지직 스타크래프트 스트리머 동아리 <strong class="text-emerald-400">스진동</strong> 대시보드입니다.
           </p>
         </div>
-        <h3 class="text-lg font-bold text-white">소속 멤버 정보</h3>
-        <div id="members-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+        <div id="members-grouped-container" class="space-y-8"></div>
       </div>
 
       <!-- TAB 3: HISTORY -->
-      <div id="tab-history" class="tab-content hidden space-y-4">
-        <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-ranking-star text-amber-400 mr-2"></i>경기 스코어보드 기록</h3>
-        <div id="history-container" class="space-y-4"></div>
+      <div id="tab-history" class="tab-content hidden space-y-8">
+        
+        <!-- Filter Buttons -->
+        <div class="flex flex-wrap gap-2 pb-2 border-b border-slate-800">
+          <button onclick="filterHistory('all')" id="hist-btn-all" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 transition">전체 보기</button>
+          <button onclick="filterHistory('match')" id="hist-btn-match" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">⚔️ 대전 및 정기모임 경기</button>
+          <button onclick="filterHistory('viewer')" id="hist-btn-viewer" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">🔥 스진동을 이겨라</button>
+          <button onclick="filterHistory('multigame')" id="hist-btn-multigame" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">🎮 종합게임 & 이벤트</button>
+        </div>
+
+        <!-- Match / Gathering Section -->
+        <div id="section-hist-match" class="hist-section space-y-4">
+          <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-trophy text-amber-400"></i> 경기 및 모임 기록</h3>
+          <div id="container-hist-match" class="space-y-4"></div>
+        </div>
+
+        <!-- Viewer Section -->
+        <div id="section-hist-viewer" class="hist-section space-y-4">
+          <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-fire text-red-500"></i> 스진동을 이겨라 (시청자 참여)</h3>
+          <div id="container-hist-viewer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </div>
+
+        <!-- MultiGame Section -->
+        <div id="section-hist-multigame" class="hist-section space-y-4">
+          <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-gamepad text-purple-400"></i> 종합게임 & 이벤트 합방</h3>
+          <div id="container-hist-multigame" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </div>
+
       </div>
 
       <!-- TAB 4: CALENDAR -->
@@ -133,7 +157,7 @@
 
   <script>
     const SPREADSHEET_ID = "1mBhZxpmt7xw8fC37cRjSaVQBSQkPXdskJNK9u1Zg_Co";
-    let db = { members: [], schedules: [], history: [], details: [] };
+    let db = { members: [], schedules: [], historyMatch: [], details: [], historyViewer: [], historyMultiGame: [] };
     let currentCalDate = new Date(2026, 7, 1);
 
     window.addEventListener('DOMContentLoaded', loadData);
@@ -148,15 +172,35 @@
       try {
         db.members = await fetchCSV('MEMBERS');
         db.schedules = await fetchCSV('Schedules');
-        db.history = await fetchCSV('Contents_History');
+        db.historyMatch = await fetchCSV('Contents_History');
         db.details = await fetchCSV('Match_Details');
+        db.historyViewer = await fetchCSV('History_Viewer');
+        db.historyMultiGame = await fetchCSV('History_MultiGame');
 
         renderMembers();
         renderWeeklyWidget();
-        renderHistory();
+        renderAllHistory();
         renderCalendar();
         checkChzzkLive();
       } catch (e) { console.error("Data Load Error:", e); }
+    }
+
+    function convertMemberNameToLink(text) {
+      if (!text) return '';
+      let resultText = text;
+
+      db.members.forEach(m => {
+        const name = m.name || m.이름;
+        const chzzkId = m.chzzk_id || (m.방송국링크 ? m.방송국링크.split('/').pop() : '');
+
+        if (name && chzzkId && resultText.includes(name)) {
+          const linkHTML = `<a href="https://chzzk.naver.com/${chzzkId}" target="_blank" class="inline-flex items-center gap-1 font-bold text-emerald-400 hover:text-emerald-300 hover:underline bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-800/80 my-0.5" onclick="event.stopPropagation();"><i class="fa-solid fa-tv text-[10px]"></i> ${name}</a>`;
+          const regExp = new RegExp(name, 'g');
+          resultText = resultText.replace(regExp, linkHTML);
+        }
+      });
+
+      return resultText;
     }
 
     function switchTab(id) {
@@ -170,33 +214,73 @@
       const activeNav = document.getElementById(`nav-${id}`);
       activeNav.classList.add('bg-emerald-500/10', 'text-emerald-400', 'border', 'border-emerald-500/20');
       
+      const heroBanner = document.getElementById('hero-banner');
+      if (id === 'main') {
+        heroBanner.classList.remove('hidden');
+      } else {
+        heroBanner.classList.add('hidden');
+      }
+
       const titles = { main: '메인 대시보드', members: '동아리 소개', history: '컨텐츠 기록', calendar: '동아리 스케줄' };
       document.getElementById('page-title').innerText = titles[id];
     }
 
     function renderMembers() {
-      const grid = document.getElementById('members-grid');
-      grid.innerHTML = '';
-      db.members.forEach(m => {
-        const name = m.name || m.이름;
-        if (!name) return;
-        const race = m.race || m.종족 || '프로토스';
-        const chzzkId = m.chzzk_id || m.방송국링크?.split('/').pop() || '';
-        const raceBadge = race === '테란' ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' :
-                          race === '저그' ? 'bg-purple-500/10 text-purple-400 border-purple-500/30' :
-                          'bg-amber-500/10 text-amber-400 border-amber-500/30';
+      const container = document.getElementById('members-grouped-container');
+      container.innerHTML = '';
 
-        grid.innerHTML += `
-          <div class="dash-card p-4 rounded-2xl flex items-center gap-4">
-            <img src="${m.profile_img || m.프로필사진 || 'https://via.placeholder.com/80'}" class="w-14 h-14 rounded-xl object-cover border border-slate-700">
-            <div>
-              <div class="flex items-center gap-2 mb-1">
-                <span class="font-bold text-white">${name}</span>
-                <span class="text-[10px] px-2 py-0.5 rounded-full border ${raceBadge}">${race}</span>
+      const races = [
+        { name: '테란', color: 'text-blue-400', border: 'border-blue-500/50', badgeBg: 'bg-blue-500/10 text-blue-400 border-blue-500/30' },
+        { name: '저그', color: 'text-purple-400', border: 'border-purple-500/50', badgeBg: 'bg-purple-500/10 text-purple-400 border-purple-500/30' },
+        { name: '프로토스', color: 'text-amber-400', border: 'border-amber-500/50', badgeBg: 'bg-amber-500/10 text-amber-400 border-amber-500/30' }
+      ];
+
+      races.forEach(r => {
+        const matchedMembers = db.members.filter(m => (m.race || m.종족) === r.name);
+        if (matchedMembers.length === 0) return;
+
+        let memberCardsHTML = matchedMembers.map(m => {
+          const name = m.name || m.이름;
+          const chzzkId = m.chzzk_id || (m.방송국링크 ? m.방송국링크.split('/').pop() : '');
+
+          let roleBadgeHTML = '';
+          if (name === '망시') {
+            roleBadgeHTML = `<span class="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-black">👑 동아리장</span>`;
+          } else if (name === '엄크술사') {
+            roleBadgeHTML = `<span class="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-black">🛠️ 매니저</span>`;
+          }
+
+          return `
+            <div class="dash-card p-5 rounded-2xl flex flex-col justify-between hover:scale-[1.02] transition duration-200">
+              <div>
+                <div class="flex items-start justify-between mb-3">
+                  <img src="${m.profile_img || m.프로필사진 || 'https://via.placeholder.com/80'}" class="w-16 h-16 rounded-2xl object-cover border-2 ${r.border} shadow-lg">
+                  <span class="text-xs px-2.5 py-1 rounded-full border ${r.badgeBg} font-bold">${r.name}</span>
+                </div>
+                <div class="space-y-1 mb-4">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h4 class="font-bold text-lg text-white">${name}</h4>
+                    ${roleBadgeHTML}
+                  </div>
+                </div>
               </div>
-              <a href="https://chzzk.naver.com/${chzzkId}" target="_blank" class="text-xs text-emerald-400 hover:underline">
-                <i class="fa-solid fa-tv mr-1"></i> 방송국 이동
+
+              <a href="https://chzzk.naver.com/${chzzkId}" target="_blank" 
+                 class="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition">
+                <i class="fa-solid fa-tv text-sm"></i> 치지직 방송국 방문
               </a>
+            </div>
+          `;
+        }).join('');
+
+        container.innerHTML += `
+          <div class="space-y-4">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
+              <span class="w-2.5 h-2.5 rounded-full ${r.color.replace('text', 'bg')}"></span>
+              <span class="${r.color}">${r.name}</span> (${matchedMembers.length}명)
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              ${memberCardsHTML}
             </div>
           </div>
         `;
@@ -209,7 +293,7 @@
       let liveCount = 0;
 
       for (let m of db.members) {
-        const chzzkId = m.chzzk_id || m.방송국링크?.split('/').pop();
+        const chzzkId = m.chzzk_id || (m.방송국링크 ? m.방송국링크.split('/').pop() : '');
         const name = m.name || m.이름;
         if (!chzzkId) continue;
 
@@ -251,65 +335,94 @@
       widget.innerHTML = '';
       const days = ['월', '화', '수', '목', '금', '토', '일'];
 
-      days.forEach(d => {
+      const now = new Date();
+      const currentDayIndex = now.getDay();
+      const distanceToMonday = (currentDayIndex === 0 ? -6 : 1 - currentDayIndex);
+      
+      const monday = new Date(now);
+      monday.setDate(now.getDate() + distanceToMonday);
+      monday.setHours(0, 0, 0, 0);
+
+      days.forEach((d, idx) => {
+        const dayDate = new Date(monday);
+        dayDate.setDate(monday.getDate() + idx);
+
+        const year = dayDate.getFullYear();
+        const month = String(dayDate.getMonth() + 1).padStart(2, '0');
+        const dateNum = String(dayDate.getDate()).padStart(2, '0');
+        const formattedTargetDate = `${year}-${month}-${dateNum}`;
+
         const matches = db.schedules.filter(s => {
           const dateStr = s.날짜 || s.date || '';
-          const contentStr = s.일정내용 || s.title || '';
-          return dateStr.includes(d) || contentStr.includes(d);
+          const dayStr = s.요일 || s.day || '';
+
+          if (dateStr.includes(formattedTargetDate)) return true;
+
+          const cleanDateStr = dateStr.replace(/년|월/g, '-').replace(/일|\s/g, '');
+          const targetShortStr = `${month}-${dateNum}`;
+          
+          if (cleanDateStr.includes(targetShortStr) && (dayStr.includes(d) || dateStr.includes(d))) {
+            return true;
+          }
+
+          return false;
         });
 
-        let eventsHTML = matches.map(m => `
-          <div class="bg-slate-800/80 p-2 rounded-lg text-xs border border-slate-700/80 text-slate-200">
-            <strong class="text-emerald-400">${m.시간 || m.time || ''}</strong><br>${m.일정내용 || m.title || ''}
-          </div>
-        `).join('');
+        let eventsHTML = matches.map(m => {
+          const originalTitle = m.일정내용 || m.title || '';
+          const linkedTitle = convertMemberNameToLink(originalTitle);
+
+          return `
+            <div class="bg-slate-800/80 p-2 rounded-lg text-xs border border-slate-700/80 text-slate-200">
+              <strong class="text-emerald-400 block mb-1">${m.시간 || m.time || ''}</strong>
+              ${linkedTitle}
+            </div>
+          `;
+        }).join('');
 
         if(!eventsHTML) eventsHTML = `<span class="text-xs text-slate-600 block text-center py-2">일정 없음</span>`;
 
         widget.innerHTML += `
           <div class="dash-card p-3 rounded-xl flex flex-col gap-2 min-h-[110px]">
-            <span class="font-bold text-center text-emerald-400 pb-1.5 border-b border-slate-800 text-xs">${d}요일</span>
+            <div class="text-center pb-1.5 border-b border-slate-800">
+              <span class="font-bold text-emerald-400 text-xs">${d}요일</span>
+              <span class="text-[10px] text-slate-500 block">${dayDate.getMonth() + 1}/${dayDate.getDate()}</span>
+            </div>
             <div class="space-y-1.5 flex-1">${eventsHTML}</div>
           </div>
         `;
       });
     }
 
-    function renderHistory() {
-      const container = document.getElementById('history-container');
-      container.innerHTML = '';
+    // --- 컨텐츠 기록 통합 렌더링 함수 ---
+    function renderAllHistory() {
+      // 1. 경기/모임 기록 (점수 유무에 따른 가변 스코어보드)
+      const matchContainer = document.getElementById('container-hist-match');
+      matchContainer.innerHTML = '';
 
-      db.history.forEach(h => {
+      db.historyMatch.forEach(h => {
         const matchId = h.매치구분 || h.match_id;
-        if(!matchId) return;
+        if (!matchId) return;
 
         const sets = db.details.filter(d => (d.매치구분 || d.match_id) === matchId);
         
-        let p1 = h.p1 || h.p1_name || '팀 A';
-        let p2 = h.p2 || h.p2_name || '팀 B';
-        let s1 = parseInt(h.p1점수 || h.p1_score) || 0;
-        let s2 = parseInt(h.p2점수 || h.p2_score) || 0;
-        let total = (s1 + s2) || 1;
-        let p1Pct = Math.round((s1 / total) * 100);
-        let p2Pct = 100 - p1Pct;
+        let p1 = h.p1 || '팀 A';
+        let p2 = h.p2 || '팀 B';
+        let rawS1 = h.p1점수 !== undefined && h.p1점수 !== '' ? h.p1점수 : null;
+        let rawS2 = h.p2점수 !== undefined && h.p2점수 !== '' ? h.p2점수 : null;
 
-        let setsList = sets.map((s, i) => `
-          <div class="flex justify-between items-center py-1.5 border-b border-slate-800 text-xs">
-            <span class="text-slate-400">${i+1}세트 (${s.맵 || s.map || '투혼'})</span>
-            <span>${s.p1 || s.p1_name || ''} vs ${s.p2 || s.p2_name || ''}</span>
-            <span class="font-bold text-emerald-400">勝: ${s.승리선수 || s.winner || '-'}</span>
-          </div>
-        `).join('');
+        const hasScore = rawS1 !== null && rawS2 !== null && !isNaN(parseInt(rawS1)) && !isNaN(parseInt(rawS2));
 
-        container.innerHTML += `
-          <div class="dash-card p-6 rounded-2xl space-y-4">
-            <div class="flex justify-between items-center text-xs text-slate-400">
-              <span class="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-emerald-400 font-bold">${h.카테고리 || h.category || '정기모임'}</span>
-              <span>${h.날짜 || h.date || ''}</span>
-            </div>
+        let scoreHTML = '';
 
-            <h4 class="text-base font-bold text-white">${h.제목 || h.title || '경기 결과'}</h4>
+        if (hasScore) {
+          let s1 = parseInt(rawS1);
+          let s2 = parseInt(rawS2);
+          let total = (s1 + s2) || 1;
+          let p1Pct = Math.round((s1 / total) * 100);
+          let p2Pct = 100 - p1Pct;
 
+          scoreHTML = `
             <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800/80 space-y-2">
               <div class="flex justify-between font-bold text-sm">
                 <span class="${s1 > s2 ? 'text-emerald-400' : 'text-slate-300'}">${p1} (${s1})</span>
@@ -320,20 +433,118 @@
                 <div style="width: ${p2Pct}%" class="bg-blue-500 h-full"></div>
               </div>
             </div>
+          `;
+        } else {
+          scoreHTML = `
+            <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/60 text-xs text-slate-300">
+              <i class="fa-solid fa-users text-emerald-400 mr-1.5"></i> <strong>진행 팀/참여:</strong> ${p1} ${p2 ? 'vs ' + p2 : ''}
+            </div>
+          `;
+        }
+
+        let setsList = sets.map((s, i) => `
+          <div class="flex justify-between items-center py-1.5 border-b border-slate-800 text-xs">
+            <span class="text-slate-400">${i+1}세트 (${s.맵 || '투혼'})</span>
+            <span>${s.p1 || ''} vs ${s.p2 || ''}</span>
+            <span class="font-bold text-emerald-400">勝: ${s.승리선수 || '-'}</span>
+          </div>
+        `).join('');
+
+        matchContainer.innerHTML += `
+          <div class="dash-card p-6 rounded-2xl space-y-4">
+            <div class="flex justify-between items-center text-xs text-slate-400">
+              <span class="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-emerald-400 font-bold">${h.카테고리 || '정기모임'}</span>
+              <span>${h.날짜 || ''}</span>
+            </div>
+
+            <h4 class="text-base font-bold text-white">${h.제목 || '모임 결과'}</h4>
+
+            ${scoreHTML}
 
             ${sets.length > 0 ? `
               <details class="group">
-                <summary class="text-xs text-slate-400 cursor-pointer hover:text-emerald-400 font-medium">
-                  ▶ 세부 라운드 스코어 열기 (${sets.length}개 세트)
-                </summary>
-                <div class="mt-3 p-3 bg-slate-950/50 rounded-xl border border-slate-800/60">
-                  ${setsList}
-                </div>
+                <summary class="text-xs text-slate-400 cursor-pointer hover:text-emerald-400 font-medium">▶ 세부 라운드 스코어 열기 (${sets.length}개 세트)</summary>
+                <div class="mt-3 p-3 bg-slate-950/50 rounded-xl border border-slate-800/60">${setsList}</div>
               </details>
             ` : ''}
           </div>
         `;
       });
+
+      // 2. 스진동을 이겨라
+      const viewerContainer = document.getElementById('container-hist-viewer');
+      viewerContainer.innerHTML = '';
+      db.historyViewer.forEach(v => {
+        if (!v.제목 && !v.title) return;
+        const linkedMembers = convertMemberNameToLink(v.참여멤버 || v.members || '');
+        const imgUrl = v.대표이미지 || v.img || 'https://via.placeholder.com/300x160?text=스진동을+이겨라';
+
+        viewerContainer.innerHTML += `
+          <div class="dash-card p-5 rounded-2xl flex flex-col justify-between space-y-4">
+            <div class="space-y-3">
+              <div class="flex justify-between items-start">
+                <span class="text-xs px-2.5 py-1 rounded-full bg-red-950 text-red-400 border border-red-800 font-bold">🔥 스진동을 이겨라</span>
+                <span class="text-xs text-slate-400">${v.날짜 || ''} (${v.진행요일 || '토'})</span>
+              </div>
+              <h4 class="text-base font-bold text-white">${v.제목 || ''}</h4>
+              <img src="${imgUrl}" class="w-full h-40 object-cover rounded-xl border border-slate-800">
+              <p class="text-xs text-slate-300 leading-relaxed">${v.설명 || ''}</p>
+              <div class="text-xs text-slate-400"><strong>참여 멤버:</strong> ${linkedMembers || '멤버 전원'}</div>
+            </div>
+            ${v.VOD_URL ? `<a href="${v.VOD_URL}" target="_blank" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold text-xs rounded-xl text-center border border-slate-700 flex items-center justify-center gap-2"><i class="fa-solid fa-play"></i> VOD 다시보기</a>` : ''}
+          </div>
+        `;
+      });
+
+      // 3. 종합게임 & 이벤트
+      const multiContainer = document.getElementById('container-hist-multigame');
+      multiContainer.innerHTML = '';
+      db.historyMultiGame.forEach(g => {
+        if (!g.게임명 && !g.title) return;
+        const linkedMembers = convertMemberNameToLink(g.참여멤버 || g.members || '');
+        const imgUrl = g.대표이미지 || g.img || 'https://via.placeholder.com/300x160?text=종합게임';
+
+        multiContainer.innerHTML += `
+          <div class="dash-card p-5 rounded-2xl flex flex-col justify-between space-y-4">
+            <div class="space-y-3">
+              <div class="flex justify-between items-start">
+                <span class="text-xs px-2.5 py-1 rounded-full bg-purple-950 text-purple-400 border border-purple-800 font-bold">🎮 종합게임</span>
+                <span class="text-xs text-slate-400">${g.날짜 || ''} (${g.진행요일 || '일'})</span>
+              </div>
+              <h4 class="text-base font-bold text-white">${g.게임명 || ''}</h4>
+              <img src="${imgUrl}" class="w-full h-40 object-cover rounded-xl border border-slate-800">
+              <p class="text-xs text-slate-300 leading-relaxed">${g.설명 || ''}</p>
+              <div class="text-xs text-slate-400"><strong>참여 멤버:</strong> ${linkedMembers || '멤버 전원'}</div>
+            </div>
+            ${g.VOD_URL ? `<a href="${g.VOD_URL}" target="_blank" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-purple-400 font-bold text-xs rounded-xl text-center border border-slate-700 flex items-center justify-center gap-2"><i class="fa-solid fa-play"></i> VOD 다시보기</a>` : ''}
+          </div>
+        `;
+      });
+    }
+
+    function filterHistory(category) {
+      document.querySelectorAll('.hist-filter-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-500', 'text-slate-950');
+        btn.classList.add('bg-slate-800', 'text-slate-300');
+      });
+
+      const activeBtn = document.getElementById(`hist-btn-${category}`);
+      if(activeBtn) {
+        activeBtn.classList.add('bg-emerald-500', 'text-slate-950');
+      }
+
+      document.querySelectorAll('.hist-section').forEach(sec => sec.classList.remove('hidden'));
+
+      if (category === 'match') {
+        document.getElementById('section-hist-viewer').classList.add('hidden');
+        document.getElementById('section-hist-multigame').classList.add('hidden');
+      } else if (category === 'viewer') {
+        document.getElementById('section-hist-match').classList.add('hidden');
+        document.getElementById('section-hist-multigame').classList.add('hidden');
+      } else if (category === 'multigame') {
+        document.getElementById('section-hist-match').classList.add('hidden');
+        document.getElementById('section-hist-viewer').classList.add('hidden');
+      }
     }
 
     function renderCalendar() {
@@ -357,16 +568,21 @@
           return dateStr.includes(`${date}일`);
         });
 
-        let eventBadges = events.map(e => `
-          <div class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] p-1 rounded-md truncate mt-1">
-            ${e.일정내용 || e.title || ''}
-          </div>
-        `).join('');
+        let eventBadges = events.map(e => {
+          const originalTitle = e.일정내용 || e.title || '';
+          const linkedTitle = convertMemberNameToLink(originalTitle);
+
+          return `
+            <div class="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-[10px] p-1.5 rounded-md mt-1 leading-relaxed">
+              ${linkedTitle}
+            </div>
+          `;
+        }).join('');
 
         grid.innerHTML += `
-          <div class="h-20 bg-slate-900/60 p-2 rounded-xl border border-slate-800/60 flex flex-col justify-between overflow-hidden">
+          <div class="h-24 bg-slate-900/60 p-2 rounded-xl border border-slate-800/60 flex flex-col justify-between overflow-hidden">
             <span class="text-xs font-bold text-slate-400">${date}</span>
-            <div class="overflow-y-auto">${eventBadges}</div>
+            <div class="overflow-y-auto flex-1">${eventBadges}</div>
           </div>
         `;
       }
