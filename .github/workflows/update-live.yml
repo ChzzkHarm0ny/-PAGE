@@ -82,9 +82,11 @@ jobs:
           });
           '
 
-      - name: Commit and push if changed
+     - name: Commit and push if changed
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.io"
           git add live-status.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update live status" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update live status" && git push origin HEAD:${{ github.ref_name }})
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
