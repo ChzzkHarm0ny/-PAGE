@@ -1,0 +1,90 @@
+name: Update Chzzk Live Status
+
+on:
+  schedule:
+    - cron: '*/10 * * * *' # 10분마다 실행
+  workflow_dispatch: # 수동 실행 버튼 허용
+
+jobs:
+  update-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Run live status scraper
+        run: |
+          node -e '
+          const fs = require("fs");
+          const https = require("https");
+
+          const SPREADSHEET_ID = "1mBhZxpmt7xw8fC37cRjSaVQBSQkPXdskJNK9u1Zg_Co";
+          const csvUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=MEMBERS`;
+
+          https.get(csvUrl, (res) => {
+            let data = "";
+            res.on("data", (chunk) => data += chunk);
+            res.on("end", async () => {
+              const lines = data.split("\n").map(l => l.trim()).filter(l => l);
+              if (lines.length === 0) return;
+              const headers = lines[0].split(",").map(h => h.replace(/^"|"$/g, ""));
+              
+              const members = [];
+              for (let i = 1; i < lines.length; i++) {
+                const currentLine = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                const obj = {};
+                headers.forEach((h, index) => {
+                  obj[h] = (currentLine[index] || "").replace(/^"|"$/g, "");
+                });
+                members.push(obj);
+              }
+
+              const liveResults = {};
+
+              for (const m of members) {
+                let chzzkId = (m.chzzk_id || m.channel_id || (m.방송국링크 ? m.방송국링크.split("/").pop() : "") || "").trim();
+                if (chzzkId.includes("/")) chzzkId = chzzkId.split("/").pop().split("?")[0];
+                if (!chzzkId) continue;
+
+                try {
+                  const liveData = await new Promise((resolve) => {
+                    const api = `https://api.chzzk.naver.com/service/v1/channels/${chzzkId}/live-detail`;
+                    https.get(api, { headers: { "User-Agent": "Mozilla/5.0" } }, (res) => {
+                      let resData = "";
+                      res.on("data", (chunk) => resData += chunk);
+                      res.on("end", () => {
+                        try {
+                          const json = JSON.parse(resData);
+                          resolve(json.content);
+                        } catch (e) { resolve(null); }
+                      });
+                    }).on("error", () => resolve(null));
+                  });
+
+                  if (liveData && liveData.status === "OPEN") {
+                    liveResults[chzzkId] = {
+                      isLive: true,
+                      liveTitle: liveData.liveTitle || "라이브 방송 중",
+                      concurrentUserCount: liveData.concurrentUserCount || 0
+                    };
+                  }
+                } catch (e) {}
+              }
+
+              fs.writeFileSync("live-status.json", JSON.stringify({ updated_at: new Date().toISOString(), lives: liveResults }, null, 2));
+              console.log("Live status updated successfully:", liveResults);
+            });
+          });
+          '
+
+      - name: Commit and push if changed
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.io"
+          git add live-status.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update live status" && git push)
