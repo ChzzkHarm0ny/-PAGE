@@ -54,7 +54,14 @@ jobs:
                 try {
                   const liveData = await new Promise((resolve) => {
                     const api = `https://api.chzzk.naver.com/service/v1/channels/${chzzkId}/live-detail`;
-                    https.get(api, { headers: { "User-Agent": "Mozilla/5.0" } }, (res) => {
+                    const options = {
+                      headers: {
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                        "Referer": "https://chzzk.naver.com"
+                      }
+                    };
+
+                    https.get(api, options, (res) => {
                       let resData = "";
                       res.on("data", (chunk) => resData += chunk);
                       res.on("end", () => {
@@ -86,6 +93,7 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.io"
+          git pull origin ${{ github.ref_name }} --rebase || echo "No remote changes to pull"
           git add live-status.json
           git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update live status" && git push origin HEAD:${{ github.ref_name }})
         env:
