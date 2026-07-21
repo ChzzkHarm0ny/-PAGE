@@ -51,10 +51,6 @@
         <button onclick="switchTab('history')" id="nav-history" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition">
           <i class="fa-solid fa-gamepad w-5"></i> 컨텐츠 기록
         </button>
-        <!-- 💡 주간스진동 탭 버튼 신설 -->
-        <button onclick="switchTab('weekly')" id="nav-weekly" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition">
-          <i class="fa-brands fa-youtube w-5 text-red-500"></i> 주간스진동
-        </button>
         <button onclick="switchTab('calendar')" id="nav-calendar" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition">
           <i class="fa-solid fa-calendar-days w-5"></i> 동아리 스케줄
         </button>
@@ -135,21 +131,6 @@
         <div id="container-history" class="space-y-4"></div>
       </div>
 
-      <!-- TAB 5: 주간스진동 (YOUTUBE) 신설 -->
-      <div id="tab-weekly" class="tab-content hidden space-y-6">
-        <div class="dash-card p-6 rounded-2xl border-l-4 border-l-red-500 flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <h3 class="text-xl font-bold text-white mb-1 flex items-center gap-2">
-              <i class="fa-brands fa-youtube text-red-500"></i> 주간스진동 영상 아카이브
-            </h3>
-            <p class="text-sm text-slate-300">스진동의 한 주간 소식과 하이라이트를 담은 유튜브 영상 모음입니다.</p>
-          </div>
-        </div>
-        <div id="weekly-youtube-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div class="col-span-full dash-card p-8 text-center text-slate-400 rounded-2xl">영상을 불러오는 중입니다...</div>
-        </div>
-      </div>
-
       <!-- TAB 4: CALENDAR -->
       <div id="tab-calendar" class="tab-content hidden space-y-4">
         <div class="dash-card p-6 rounded-2xl space-y-4">
@@ -179,7 +160,7 @@
       protoss: "https://cdn.discordapp.com/attachments/1528721011732643951/1528793444435099648/WrK9L73w0c_CY7HVAOuXzdRg4yS7OBrMXtBIs1qEGHnPZPTeH7N8t1Mzb8sIRkcSkLSi0v47wBiONdp35r10WIE-tmRf8d4EN2gUaMBVgOR0OYFJj_kPILzCITBFwL6SMK05jX0r1pnJiNIp2t5PjQ.webp?ex=6a5f9758&is=6a5e45d8&hm=63492a3a94779f80643e3c3f5a1f546e5df60b4da678e33ae2b9e260b58b76c2&"
     };
 
-    let db = { members: [], schedules: [], historyMatch: [], historyMulti: [], weeklyYoutube: [], details: [] };
+    let db = { members: [], schedules: [], historyMatch: [], historyMulti: [], details: [] };
     let currentCategoryFilter = 'all';
     let currentCalDate = new Date();
 
@@ -204,13 +185,11 @@
         db.schedules = await fetchCSV('Schedules');
         db.historyMatch = await fetchCSV('Contents_History');
         db.historyMulti = await fetchCSV('History_MultiGame');
-        db.weeklyYoutube = await fetchCSV('WEEKLY_YOUTUBE').catch(() => []); // 탭이 없을 경우 에러 방지
         db.details = await fetchCSV('Match_Details');
 
         renderMembers();
         renderWeeklyWidget();
         renderAllHistory();
-        renderWeeklyYoutube();
         renderCalendar();
         checkChzzkLive();
       } catch (e) { console.error("Data Load Error:", e); }
@@ -223,147 +202,6 @@
       setTimeout(() => {
         icon.classList.remove('fa-spin');
       }, 600);
-    }
-
-    // 유튜브 주소에서 썸네일 자동 추출 또는 직접 입력된 이미지 사용 함수
-    function getYoutubeThumbnail(url, customImg) {
-      if (customImg) return customImg;
-      if (!url) return 'https://via.placeholder.com/320x180?text=주간스진동';
-      
-      let videoId = '';
-      if (url.includes('youtu.be/')) {
-        videoId = url.split('youtu.be/')[1]?.split('?')[0];
-      } else if (url.includes('watch?v=')) {
-        videoId = url.split('watch?v=')[1]?.split('&')[0];
-      }
-      
-      if (videoId) {
-        return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-      }
-      return 'https://via.placeholder.com/320x180?text=주간스진동';
-    }
-
-    // 💡 주간스진동 유튜브 탭 렌더링 함수
-    function renderWeeklyYoutube() {
-      const container = document.getElementById('weekly-youtube-grid');
-      if (!container) return;
-
-      if (!db.weeklyYoutube || db.weeklyYoutube.length === 0) {
-        container.innerHTML = `<div class="col-span-full dash-card p-8 text-center text-slate-400 rounded-2xl border border-slate-800 text-xs">등록된 주간스진동 영상이 없습니다. (WEEKLY_YOUTUBE 시트를 확인해주세요)</div>`;
-        return;
-      }
-
-      container.innerHTML = db.weeklyYoutube.map(item => {
-        const title = item.title || item.제목 || '주간스진동 영상';
-        const date = item.date || item.날짜 || '';
-        const url = item.youtube_url || item.url || '#';
-        const customImg = item.thumbnail_img || item.img || '';
-        const desc = item.description || item.설명 || '';
-        const thumbUrl = getYoutubeThumbnail(url, customImg);
-
-        return `
-          <div class="dash-card rounded-2xl overflow-hidden flex flex-col justify-between group hover:border-red-500/40 transition duration-300">
-            <div>
-              <div class="relative overflow-hidden aspect-video bg-slate-950">
-                <img src="${thumbUrl}" alt="${title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                <div class="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition flex items-center justify-center">
-                  <div class="w-12 h-12 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition">
-                    <i class="fa-solid fa-play ml-0.5"></i>
-                  </div>
-                </div>
-                ${date ? `<span class="absolute bottom-2 right-2 px-2 py-0.5 bg-black/80 text-white text-[10px] rounded font-medium">${date}</span>` : ''}
-              </div>
-              <div class="p-5 space-y-2">
-                <h4 class="font-bold text-white text-base line-clamp-1 group-hover:text-red-400 transition">${title}</h4>
-                ${desc ? `<p class="text-xs text-slate-300 line-clamp-2 leading-relaxed">${desc}</p>` : ''}
-              </div>
-            </div>
-            <div class="p-5 pt-0">
-              <a href="${url}" target="_blank" class="w-full py-2.5 bg-slate-800 hover:bg-red-600 hover:text-white text-slate-200 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition border border-slate-700/80">
-                <i class="fa-brands fa-youtube text-red-500 group-hover:text-white"></i> 유튜브에서 시청하기
-              </a>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    async function checkChzzkLive() {
-      const grid = document.getElementById('live-grid');
-      let liveCount = 0;
-      let liveMap = {};
-
-      try {
-        const res = await fetch('./live-status.json?t=' + new Date().getTime());
-        const json = await res.json();
-        liveMap = json.lives || {};
-        
-        if(json.updated_at) {
-          const syncText = document.getElementById('last-sync-time');
-          if(syncText) syncText.innerText = `백그라운드 갱신: ${new Date(json.updated_at).toLocaleTimeString()}`;
-        }
-      } catch (e) {
-        console.warn("live-status.json 로드 실패");
-      }
-
-      let tempHTML = '';
-
-      for (let m of db.members) {
-        let chzzkId = (m.chzzk_id || m.channel_id || m.chzzkId || (m.방송국링크 ? m.방송국링크.split('/').pop() : '') || '').trim();
-        if (chzzkId.includes('/')) {
-          chzzkId = chzzkId.split('/').pop().split('?')[0];
-        }
-
-        const name = (m.name || m.이름 || '').trim();
-        const profileImg = m.profile_img || m.프로필사진 || 'https://via.placeholder.com/80';
-        if (!chzzkId) continue;
-
-        const liveInfo = liveMap[chzzkId];
-
-        if (liveInfo && liveInfo.isLive) {
-          liveCount++;
-          const liveTitle = liveInfo.liveTitle || '라이브 방송 중';
-
-          tempHTML += `
-            <div class="dash-card p-5 rounded-2xl border-l-4 border-l-red-500 flex flex-col justify-between hover:border-red-400 transition shadow-lg">
-              <div>
-                <div class="flex items-center justify-between mb-3">
-                  <div class="flex items-center gap-3">
-                    <img src="${profileImg}" class="w-10 h-10 rounded-xl object-cover border border-slate-700">
-                    <div>
-                      <span class="font-bold text-white text-sm block">${name}</span>
-                      <span class="text-[10px] text-emerald-400 font-medium">CHZZK STREAMER</span>
-                    </div>
-                  </div>
-                  <span class="bg-red-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full animate-pulse flex items-center gap-1 shadow-sm shadow-red-500/50">
-                    <span class="w-1.5 h-1.5 rounded-full bg-white"></span> LIVE
-                  </span>
-                </div>
-
-                <p class="text-xs text-slate-200 font-semibold truncate my-2 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/80" title="${liveTitle}">
-                  <i class="fa-solid fa-satellite-dish text-red-400 mr-1.5"></i>${liveTitle}
-                </p>
-              </div>
-
-              <a href="https://chzzk.naver.com/live/${chzzkId}" target="_blank" 
-                 class="w-full mt-2 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl text-center flex items-center justify-center gap-1.5 transition">
-                <i class="fa-solid fa-play text-[10px]"></i> 라이브 방송 시청하기
-              </a>
-            </div>
-          `;
-        }
-      }
-
-      if (liveCount > 0) {
-        grid.innerHTML = tempHTML;
-      } else {
-        grid.innerHTML = `
-          <div class="col-span-full dash-card p-8 text-center text-slate-400 rounded-2xl border border-slate-800">
-            <i class="fa-solid fa-headset text-2xl text-slate-600 mb-2 block"></i>
-            현재 라이브 방송 중인 멤버가 없습니다.
-          </div>
-        `;
-      }
     }
 
     function getRaceIconOnly(text, explicitRace) {
@@ -420,7 +258,7 @@
         heroBanner.classList.add('hidden');
       }
 
-      const titles = { main: '메인 대시보드', members: '동아리 소개', history: '컨텐츠 기록', weekly: '주간스진동', calendar: '동아리 스케줄' };
+      const titles = { main: '메인 대시보드', members: '동아리 소개', history: '컨텐츠 기록', calendar: '동아리 스케줄' };
       document.getElementById('page-title').innerText = titles[id] || '스진동';
     }
 
@@ -488,6 +326,100 @@
       });
     }
 
+    async function checkChzzkLive() {
+      const grid = document.getElementById('live-grid');
+      let liveCount = 0;
+
+      grid.innerHTML = `<div class="col-span-full dash-card p-6 text-center text-slate-400 rounded-2xl border border-slate-800 text-xs animate-pulse">라이브 방송을 검색 중입니다...</div>`;
+
+      let tempHTML = '';
+
+      for (let m of db.members) {
+        let chzzkId = (m.chzzk_id || m.channel_id || m.chzzkId || (m.방송국링크 ? m.방송국링크.split('/').pop() : '') || '').trim();
+        if (chzzkId.includes('/')) {
+          chzzkId = chzzkId.split('/').pop().split('?')[0];
+        }
+
+        const name = (m.name || m.이름 || '').trim();
+        const profileImg = m.profile_img || m.프로필사진 || 'https://via.placeholder.com/80';
+        if (!chzzkId) continue;
+
+        const timestamp = new Date().getTime();
+        const targetApi = `https://api.chzzk.naver.com/service/v1/channels/${chzzkId}/live-detail?_t=${timestamp}`;
+
+        const proxyCandidates = [
+          `https://api.allorigins.win/get?url=${encodeURIComponent(targetApi)}`,
+          `https://corsproxy.io/?${encodeURIComponent(targetApi)}`
+        ];
+
+        let liveData = null;
+
+        for (let proxyUrl of proxyCandidates) {
+          try {
+            const res = await fetch(proxyUrl);
+            const resJson = await res.json();
+            
+            let parsed = resJson.contents ? JSON.parse(resJson.contents) : resJson;
+            if (parsed && parsed.content) {
+              liveData = parsed.content;
+              break;
+            }
+          } catch (e) {
+            continue;
+          }
+        }
+
+        if (liveData && liveData.status === 'OPEN') {
+          liveCount++;
+          const liveTitle = liveData.liveTitle || '라이브 방송 중';
+
+          tempHTML += `
+            <div class="dash-card p-5 rounded-2xl border-l-4 border-l-red-500 flex flex-col justify-between hover:border-red-400 transition shadow-lg">
+              <div>
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-3">
+                    <img src="${profileImg}" class="w-10 h-10 rounded-xl object-cover border border-slate-700">
+                    <div>
+                      <span class="font-bold text-white text-sm block">${name}</span>
+                      <span class="text-[10px] text-emerald-400 font-medium">CHZZK STREAMER</span>
+                    </div>
+                  </div>
+                  <span class="bg-red-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full animate-pulse flex items-center gap-1 shadow-sm shadow-red-500/50">
+                    <span class="w-1.5 h-1.5 rounded-full bg-white"></span> LIVE
+                  </span>
+                </div>
+
+                <p class="text-xs text-slate-200 font-semibold truncate my-2 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/80" title="${liveTitle}">
+                  <i class="fa-solid fa-satellite-dish text-red-400 mr-1.5"></i>${liveTitle}
+                </p>
+              </div>
+
+              <a href="https://chzzk.naver.com/live/${chzzkId}" target="_blank" 
+                 class="w-full mt-2 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl text-center flex items-center justify-center gap-1.5 transition">
+                <i class="fa-solid fa-play text-[10px]"></i> 라이브 방송 시청하기
+              </a>
+            </div>
+          `;
+        }
+      }
+
+      const nowTime = new Date().toLocaleTimeString();
+      const syncText = document.getElementById('last-sync-time');
+      if(syncText) syncText.innerText = `마지막 갱신: ${nowTime}`;
+
+      if (liveCount > 0) {
+        grid.innerHTML = tempHTML;
+      } else {
+        grid.innerHTML = `
+          <div class="col-span-full dash-card p-8 text-center text-slate-400 rounded-2xl border border-slate-800">
+            <i class="fa-solid fa-headset text-2xl text-slate-600 mb-2 block"></i>
+            현재 라이브 방송 중인 멤버가 없습니다.
+          </div>
+        `;
+      }
+    }
+
+    // 💡 '참여:' 글씨 완전 삭제 및 컨텐츠 바로 아래 명단 배치 구조
     function renderWeeklyWidget() {
       const widget = document.getElementById('weekly-widget');
       widget.innerHTML = '';
