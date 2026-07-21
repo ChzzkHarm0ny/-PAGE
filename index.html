@@ -326,7 +326,7 @@
       });
     }
 
-    // 💡 캐시 방지 + 우회 감지 방식 치지직 라이브 수신
+    // 💡 치지직 라이브 완전 자동 감지 (프로필사진 + 이름 + 실시간 라이브제목 + 시청하기)
     async function checkChzzkLive() {
       const grid = document.getElementById('live-grid');
       grid.innerHTML = '';
@@ -339,44 +339,67 @@
         }
 
         const name = (m.name || m.이름 || '').trim();
+        const profileImg = m.profile_img || m.프로필사진 || 'https://via.placeholder.com/80';
         if (!chzzkId) continue;
 
-        try {
-          const timestamp = new Date().getTime();
-          const targetApi = `https://api.chzzk.naver.com/polling/v2/channels/${chzzkId}/live-status?_t=${timestamp}`;
-          const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetApi)}`;
+        const timestamp = new Date().getTime();
+        // 상세 라이브 정보를 파싱하기 위한 엔드포인트
+        const targetApi = `https://api.chzzk.naver.com/service/v1/channels/${chzzkId}/live-detail?_t=${timestamp}`;
 
-          const res = await fetch(proxyUrl);
-          const resJson = await res.json();
-          
-          let data = {};
-          if (resJson.contents) {
-            data = JSON.parse(resJson.contents);
+        const proxyCandidates = [
+          `https://api.allorigins.win/get?url=${encodeURIComponent(targetApi)}`,
+          `https://corsproxy.io/?${encodeURIComponent(targetApi)}`
+        ];
+
+        let liveData = null;
+
+        for (let proxyUrl of proxyCandidates) {
+          try {
+            const res = await fetch(proxyUrl);
+            const resJson = await res.json();
+            
+            let parsed = resJson.contents ? JSON.parse(resJson.contents) : resJson;
+            if (parsed && parsed.content) {
+              liveData = parsed.content;
+              break;
+            }
+          } catch (e) {
+            continue;
           }
+        }
 
-          if (data && data.content && data.content.status === 'OPEN') {
-            liveCount++;
-            const liveTitle = data.content.liveTitle || '라이브 방송 중';
+        // status === 'OPEN' 체크
+        if (liveData && liveData.status === 'OPEN') {
+          liveCount++;
+          const liveTitle = liveData.liveTitle || '라이브 방송 중';
 
-            grid.innerHTML += `
-              <div class="dash-card p-5 rounded-2xl border-l-4 border-l-red-500 flex flex-col justify-between hover:border-red-400 transition">
-                <div>
-                  <div class="flex justify-between items-center mb-2">
-                    <span class="font-bold text-white text-base">${name}</span>
-                    <span class="bg-red-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full animate-pulse flex items-center gap-1">
-                      <span class="w-1.5 h-1.5 rounded-full bg-white"></span> LIVE
-                    </span>
+          grid.innerHTML += `
+            <div class="dash-card p-5 rounded-2xl border-l-4 border-l-red-500 flex flex-col justify-between hover:border-red-400 transition shadow-lg">
+              <div>
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-3">
+                    <img src="${profileImg}" class="w-10 h-10 rounded-xl object-cover border border-slate-700">
+                    <div>
+                      <span class="font-bold text-white text-sm block">${name}</span>
+                      <span class="text-[10px] text-emerald-400 font-medium">CHZZK STREAMER</span>
+                    </div>
                   </div>
-                  <p class="text-xs text-slate-300 truncate mb-4 font-medium" title="${liveTitle}">${liveTitle}</p>
+                  <span class="bg-red-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full animate-pulse flex items-center gap-1 shadow-sm shadow-red-500/50">
+                    <span class="w-1.5 h-1.5 rounded-full bg-white"></span> LIVE
+                  </span>
                 </div>
-                <a href="https://chzzk.naver.com/live/${chzzkId}" target="_blank" class="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl text-center flex items-center justify-center gap-1.5 transition">
-                  <i class="fa-solid fa-play text-[10px]"></i> 방송 시청하기
-                </a>
+
+                <p class="text-xs text-slate-200 font-semibold truncate my-2 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/80" title="${liveTitle}">
+                  <i class="fa-solid fa-satellite-dish text-red-400 mr-1.5"></i>${liveTitle}
+                </p>
               </div>
-            `;
-          }
-        } catch(e) {
-          console.error(`Live Check Error for ${name}:`, e);
+
+              <a href="https://chzzk.naver.com/live/${chzzkId}" target="_blank" 
+                 class="w-full mt-2 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl text-center flex items-center justify-center gap-1.5 transition">
+                <i class="fa-solid fa-play text-[10px]"></i> 라이브 방송 시청하기
+              </a>
+            </div>
+          `;
         }
       }
 
@@ -619,7 +642,7 @@
               <p class="text-xs text-slate-300 leading-relaxed">${g.description || g.설명 || ''}</p>
               <div class="text-xs text-slate-400"><strong>참여 멤버:</strong> ${linkedMembers || '멤버 전원'}</div>
             </div>
-            ${g.vod_url || g.VOD_URL ? `<a href="${g.vod_url || g.VOD_URL}" target="_blank" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-purple-400 font-bold text-xs rounded-xl text-center border border-slate-700 flex items-center justify-center gap-2"><i class="fa-solid fa-play"></i> VOD 다시보기</a>` : ''}
+            ${g.vod_url || v.VOD_URL ? `<a href="${g.vod_url || g.VOD_URL}" target="_blank" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-purple-400 font-bold text-xs rounded-xl text-center border border-slate-700 flex items-center justify-center gap-2"><i class="fa-solid fa-play"></i> VOD 다시보기</a>` : ''}
           </div>
         `;
       });
