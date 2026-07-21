@@ -31,15 +31,16 @@ jobs:
             res.on("data", (chunk) => data += chunk);
             res.on("end", async () => {
               const lines = data.split("\n").map(l => l.trim()).filter(l => l);
-              if (lines.length === 0) return;
-              const headers = lines[0].split(",").map(h => h.replace(/^"|"$/g, ""));
+              if (lines.length < 2) return;
               
+              const headers = lines[0].split(",").map(h => h.replace(/^"|"$/g, "").trim());
               const members = [];
+
               for (let i = 1; i < lines.length; i++) {
                 const currentLine = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 const obj = {};
                 headers.forEach((h, index) => {
-                  obj[h] = (currentLine[index] || "").replace(/^"|"$/g, "");
+                  obj[h] = (currentLine[index] || "").replace(/^"|"$/g, "").trim();
                 });
                 members.push(obj);
               }
@@ -47,8 +48,11 @@ jobs:
               const liveResults = {};
 
               for (const m of members) {
-                let chzzkId = (m.chzzk_id || m.channel_id || (m.방송국링크 ? m.방송국링크.split("/").pop() : "") || "").trim();
-                if (chzzkId.includes("/")) chzzkId = chzzkId.split("/").pop().split("?")[0];
+                // 캡처 화면의 name, chzzk_id 컬럼을 정확히 타겟팅하도록 수정
+                let chzzkId = (m.chzzk_id || m.channel_id || "").trim();
+                if (!chzzkId && m.방송국링크) {
+                  chzzkId = m.방송국링크.split("/").pop().split("?")[0];
+                }
                 if (!chzzkId) continue;
 
                 try {
