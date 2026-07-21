@@ -169,7 +169,7 @@
     };
 
     let db = { members: [], schedules: [], historyMatch: [], details: [], historyViewer: [], historyMultiGame: [] };
-    let currentCalDate = new Date(2026, 7, 1);
+    let currentCalDate = new Date(); // 오늘 접속 날짜 기준
 
     window.addEventListener('DOMContentLoaded', loadData);
 
@@ -385,6 +385,7 @@
       }
     }
 
+    // 💡 날짜 파싱 고도화 주간 일정표 위젯
     function renderWeeklyWidget() {
       const widget = document.getElementById('weekly-widget');
       widget.innerHTML = '';
@@ -402,35 +403,38 @@
         const dayDate = new Date(monday);
         dayDate.setDate(monday.getDate() + idx);
 
-        const year = dayDate.getFullYear();
-        const month = String(dayDate.getMonth() + 1).padStart(2, '0');
-        const dateNum = String(dayDate.getDate()).padStart(2, '0');
-        const formattedTargetDate = `${year}-${month}-${dateNum}`;
+        const targetY = dayDate.getFullYear();
+        const targetM = dayDate.getMonth() + 1;
+        const targetD = dayDate.getDate();
 
         const matches = db.schedules.filter(s => {
-          const dateStr = String(s.date || s.날짜 || '').trim();
-          const dayStr = String(s.day || s.요일 || '').trim();
+          const rawDate = String(s.date || s.날짜 || '').trim();
+          if (!rawDate) return false;
 
-          if (dateStr.includes(formattedTargetDate)) return true;
+          // "2026. 8. 1", "2026-08-01", "2026/8/1" 포맷 파싱
+          const clean = rawDate.replace(/\s+/g, '');
+          const parts = clean.split(/[-.\/]/).filter(p => p !== '');
 
-          const cleanDateStr = dateStr.replace(/년|월|\./g, '-').replace(/일|\s/g, '');
-          const targetShortStr = `${month}-${dateNum}`;
-          
-          if (cleanDateStr.includes(targetShortStr) && (dayStr.includes(d) || dateStr.includes(d))) {
-            return true;
+          if (parts.length >= 3) {
+            const parsedY = parseInt(parts[0], 10);
+            const parsedM = parseInt(parts[1], 10);
+            const parsedD = parseInt(parts[2], 10);
+
+            if (parsedY === targetY && parsedM === targetM && parsedD === targetD) {
+              return true;
+            }
           }
-
           return false;
         });
 
         let eventsHTML = matches.map(m => {
           const originalTitle = m.title || m.일정내용 || m.내용 || '';
           const linkedTitle = convertMemberNameToLink(originalTitle);
-          const timeVal = m.time || m.시간 || '시간미정';
+          const timeVal = m.time || m.시간 || '';
 
           return `
             <div class="bg-slate-800/80 p-2 rounded-lg text-xs border border-slate-700/80 text-slate-200">
-              <strong class="text-emerald-400 block mb-1"><i class="fa-regular fa-clock text-[10px]"></i> ${timeVal}</strong>
+              <strong class="text-emerald-400 block mb-1"><i class="fa-regular fa-clock text-[10px]"></i> ${timeVal || '시간미정'}</strong>
               ${linkedTitle}
             </div>
           `;
@@ -442,7 +446,7 @@
           <div class="dash-card p-3 rounded-xl flex flex-col gap-2 min-h-[110px]">
             <div class="text-center pb-1.5 border-b border-slate-800">
               <span class="font-bold text-emerald-400 text-xs">${d}요일</span>
-              <span class="text-[10px] text-slate-500 block">${dayDate.getMonth() + 1}/${dayDate.getDate()}</span>
+              <span class="text-[10px] text-slate-500 block">${targetM}/${targetD}</span>
             </div>
             <div class="space-y-1.5 flex-1">${eventsHTML}</div>
           </div>
@@ -662,9 +666,6 @@
         const events = db.schedules.filter(s => {
           const rawDate = String(s.date || s.날짜 || '').trim();
           if (!rawDate) return false;
-
-          if (rawDate.includes(`${month + 1}월`) && rawDate.includes(`${date}일`)) return true;
-          if (rawDate.includes(`${date}일`) && !rawDate.includes('월')) return true;
 
           const clean = rawDate.replace(/\s+/g, '');
           const parts = clean.split(/[-.\/]/).filter(p => p !== '');
