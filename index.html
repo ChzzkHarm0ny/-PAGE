@@ -1,61 +1,85 @@
-async function checkChzzkLive() {
-  const grid = document.getElementById('live-grid');
-  grid.innerHTML = '';
-  let liveCount = 0;
-
-  for (let m of db.members) {
-    // 풀 URL이 입력되어 있어도 32자리 ID만 정확히 추출
-    let chzzkId = (m.chzzk_id || m.channel_id || m.chzzkId || '').trim();
-    if (chzzkId.includes('/')) {
-      chzzkId = chzzkId.split('/').pop().split('?')[0];
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>스진동 - 치지직 스타크래프트 동아리</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    body { font-family: 'Pretendard', sans-serif; background-color: #0b0f19; color: #f1f5f9; }
+    
+    .dash-card {
+      background: rgba(17, 24, 39, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
     }
+    .dash-card:hover { border-color: rgba(16, 185, 129, 0.3); }
+    
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0b0f19; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
 
-    const name = (m.name || m.이름 || '').trim();
-    if (!chzzkId) continue;
+    /* 종족별 전용 컬러 */
+    .race-terran-text { color: #60a5fa !important; }
+    .race-terran-bg { background-color: #3b82f6 !important; }
+    
+    .race-protoss-text { color: #f59e0b !important; }
+    .race-protoss-bg { background-color: #f59e0b !important; }
+    
+    .race-zerg-text { color: #ef4444 !important; }
+    .race-zerg-bg { background-color: #ef4444 !important; }
+  </style>
+</head>
+<body class="flex h-screen overflow-hidden">
 
-    try {
-      const targetApi = `https://api.chzzk.naver.com/polling/v2/channels/${chzzkId}/live-status`;
-      // AllOrigins 안정적인 CORS 우회 프록시 사용
-      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetApi)}`;
-
-      let res = await fetch(proxyUrl);
-      let data = await res.json();
-
-      // 만약 프록시 응답이 텍스트로 들어온 경우 JSON 파싱
-      if (typeof data === 'string') {
-        data = JSON.parse(data);
-      }
-
-      if (data?.content?.status === 'OPEN') {
-        liveCount++;
-        const liveTitle = data.content.liveTitle || '라이브 방송 중';
-
-        grid.innerHTML += `
-          <div class="dash-card p-5 rounded-2xl border-l-4 border-l-red-500 flex flex-col justify-between">
-            <div>
-              <div class="flex justify-between items-center mb-2">
-                <span class="font-bold text-white">${name}</span>
-                <span class="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">LIVE</span>
-              </div>
-              <p class="text-xs text-slate-300 truncate mb-4" title="${liveTitle}">${liveTitle}</p>
-            </div>
-            <a href="https://chzzk.naver.com/live/${chzzkId}" target="_blank" class="w-full py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl text-center flex items-center justify-center gap-1.5 transition">
-              <i class="fa-solid fa-play text-[10px]"></i> 시청하기
-            </a>
-          </div>
-        `;
-      }
-    } catch (e) {
-      console.error(`Live Check Error (${name}):`, e);
-    }
-  }
-
-  if (liveCount === 0) {
-    grid.innerHTML = `
-      <div class="col-span-full dash-card p-8 text-center text-slate-400 rounded-2xl border border-slate-800">
-        <i class="fa-solid fa-headset text-2xl text-slate-600 mb-2 block"></i>
-        현재 방송 중인 멤버가 없습니다.
+  <!-- SIDEBAR -->
+  <aside class="w-64 bg-slate-900/90 border-r border-slate-800/80 flex flex-col justify-between hidden md:flex z-20">
+    <div>
+      <div class="h-20 flex items-center px-6 gap-3 border-b border-slate-800/60">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-300 flex items-center justify-center font-black text-slate-950 text-xl shadow-lg shadow-emerald-500/20">S</div>
+        <div>
+          <h1 class="font-extrabold text-lg text-white tracking-wider">스진동</h1>
+          <p class="text-[10px] text-emerald-400 font-medium tracking-tight">CHZZK SC CLUB</p>
+        </div>
       </div>
-    `;
-  }
-}
+
+      <nav class="p-4 space-y-1.5">
+        <button onclick="switchTab('main')" id="nav-main" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 transition">
+          <i class="fa-solid fa-chart-pie w-5"></i> 메인 대시보드
+        </button>
+        <button onclick="switchTab('members')" id="nav-members" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition">
+          <i class="fa-solid fa-users w-5"></i> 동아리 소개
+        </button>
+        <button onclick="switchTab('history')" id="nav-history" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition">
+          <i class="fa-solid fa-gamepad w-5"></i> 컨텐츠 기록
+        </button>
+        <button onclick="switchTab('calendar')" id="nav-calendar" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition">
+          <i class="fa-solid fa-calendar-days w-5"></i> 동아리 스케줄
+        </button>
+      </nav>
+    </div>
+
+    <div class="p-4 border-t border-slate-800/60 text-xs text-slate-500 flex items-center justify-between">
+      <span>DB Sync: <strong class="text-emerald-400">Live</strong></span>
+      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+    </div>
+  </aside>
+
+  <!-- MAIN VIEW -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <header class="h-20 border-b border-slate-800/60 bg-slate-900/40 backdrop-blur-md px-6 flex items-center justify-between z-10">
+      <h2 id="page-title" class="text-xl font-bold text-white">메인 대시보드</h2>
+      <span class="text-xs px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-medium flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span> 치지직 API 연동 정상
+      </span>
+    </header>
+
+    <main class="flex-1 overflow-y-auto p-6 space-y-8">
+
+      <!-- BANNER HERO -->
+      <div id="hero-banner" class="w-full dash-card p-4 sm:p-6 rounded-2xl flex items-center justify-center overflow-hidden">
+        <img src="
