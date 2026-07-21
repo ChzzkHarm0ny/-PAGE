@@ -359,8 +359,14 @@
             const res = await fetch(proxyUrl);
             const resJson = await res.json();
             
-            let parsed = resJson.contents ? JSON.parse(resJson.contents) : resJson;
-            if (parsed && parsed.content) {
+            let parsed = null;
+            if (resJson.contents) {
+              parsed = JSON.parse(resJson.contents);
+            } else {
+              parsed = resJson;
+            }
+
+            if (parsed && parsed.code === 200 && parsed.content) {
               liveData = parsed.content;
               break;
             }
@@ -392,15 +398,14 @@
                 <p class="text-xs text-slate-200 font-semibold truncate my-2 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/80" title="${liveTitle}">
                   <i class="fa-solid fa-satellite-dish text-red-400 mr-1.5"></i>${liveTitle}
                 </p>
-              </div>
-
-              <a href="https://chzzk.naver.com/live/${chzzkId}" target="_blank" 
-                 class="w-full mt-2 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl text-center flex items-center justify-center gap-1.5 transition">
-                <i class="fa-solid fa-play text-[10px]"></i> 라이브 방송 시청하기
-              </a>
             </div>
-          `;
-        }
+
+            <a href="https://chzzk.naver.com/live/${chzzkId}" target="_blank" 
+               class="w-full mt-2 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl text-center flex items-center justify-center gap-1.5 transition">
+              <i class="fa-solid fa-play text-[10px]"></i> 라이브 방송 시청하기
+            </a>
+          </div>
+        `;
       }
 
       const nowTime = new Date().toLocaleTimeString();
@@ -419,7 +424,6 @@
       }
     }
 
-    // 💡 '참여:' 글씨 완전 삭제 및 컨텐츠 바로 아래 명단 배치 구조
     function renderWeeklyWidget() {
       const widget = document.getElementById('weekly-widget');
       widget.innerHTML = '';
@@ -528,19 +532,19 @@
               <div class="flex-1 text-right truncate pr-4 text-white flex items-center justify-end gap-2">
                 ${p1Icon ? `<img src="${p1Icon}" class="w-4 h-4 object-contain">` : ''} 
                 <span class="truncate">${p1}</span>
-              </div>
-              
+            </div>
+            
               <div class="px-5 py-1.5 bg-slate-800/90 rounded-xl border border-slate-700 text-white tracking-widest text-lg shadow-inner">
                 <span class="${isP1Win ? 'text-emerald-400 font-black' : ''}">${s1}</span> 
                 <span class="text-slate-500 mx-1">:</span> 
                 <span class="${isP2Win ? 'text-emerald-400 font-black' : ''}">${s2}</span>
-              </div>
+            </div>
 
-              <div class="flex-1 text-left truncate pl-4 text-white flex items-center justify-start gap-2">
+            <div class="flex-1 text-left truncate pl-4 text-white flex items-center justify-start gap-2">
                 <span class="truncate">${p2}</span>
                 ${p2Icon ? `<img src="${p2Icon}" class="w-4 h-4 object-contain">` : ''}
-              </div>
             </div>
+          </div>
           `;
         }
 
@@ -622,16 +626,16 @@
             ${description ? `
               <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 text-xs text-slate-200 leading-relaxed">
                 <i class="fa-solid fa-gamepad text-purple-400 mr-2"></i>${description}
-              </div>
-            ` : ''}
+            </div>
+          ` : ''}
 
             ${linkedMembers ? `
               <div class="text-xs text-slate-400 pt-2 border-t border-slate-800/80 space-y-1">
                 <strong class="text-slate-300 block mb-1">참여 멤버</strong>
                 <div class="flex flex-wrap gap-1">${linkedMembers}</div>
-              </div>
-            ` : ''}
-          </div>
+            </div>
+          ` : ''}
+        </div>
         `;
       }).join('');
 
