@@ -4,11 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>스진동 - 치지직 스타크래프트 동아리</title>
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- PapaParse for Google Sheets CSV Parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -20,33 +17,26 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
     }
-    .dash-card:hover {
-      border-color: rgba(16, 185, 129, 0.3);
-    }
+    .dash-card:hover { border-color: rgba(16, 185, 129, 0.3); }
     
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #0b0f19; }
     ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #334155; }
   </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 
-  <!-- 1. SIDEBAR NAVIGATION -->
+  <!-- SIDEBAR -->
   <aside class="w-64 bg-slate-900/90 border-r border-slate-800/80 flex flex-col justify-between hidden md:flex z-20">
     <div>
-      <!-- Left-Top Header Text Logo -->
       <div class="h-20 flex items-center px-6 gap-3 border-b border-slate-800/60">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-300 flex items-center justify-center font-black text-slate-950 text-xl shadow-lg shadow-emerald-500/20">
-          S
-        </div>
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-300 flex items-center justify-center font-black text-slate-950 text-xl shadow-lg shadow-emerald-500/20">S</div>
         <div>
           <h1 class="font-extrabold text-lg text-white tracking-wider">스진동</h1>
           <p class="text-[10px] text-emerald-400 font-medium tracking-tight">CHZZK SC CLUB</p>
         </div>
       </div>
 
-      <!-- Nav Menu -->
       <nav class="p-4 space-y-1.5">
         <button onclick="switchTab('main')" id="nav-main" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 transition">
           <i class="fa-solid fa-chart-pie w-5"></i> 메인 대시보드
@@ -63,90 +53,65 @@
       </nav>
     </div>
 
-    <!-- Bottom Status -->
     <div class="p-4 border-t border-slate-800/60 text-xs text-slate-500 flex items-center justify-between">
       <span>DB Sync: <strong class="text-emerald-400">Live</strong></span>
       <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
     </div>
   </aside>
 
-  <!-- MAIN CONTENT AREA -->
+  <!-- MAIN VIEW -->
   <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-    
-    <!-- Top Bar -->
     <header class="h-20 border-b border-slate-800/60 bg-slate-900/40 backdrop-blur-md px-6 flex items-center justify-between z-10">
-      <div class="flex items-center gap-4">
-        <h2 id="page-title" class="text-xl font-bold text-white">메인 대시보드</h2>
-      </div>
-      <div class="flex items-center gap-3">
-        <span class="text-xs px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-medium flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-400"></span> 치지직 API 연동 정상
-        </span>
-      </div>
+      <h2 id="page-title" class="text-xl font-bold text-white">메인 대시보드</h2>
+      <span class="text-xs px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-medium flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span> 치지직 API 정상
+      </span>
     </header>
 
-    <!-- Main Viewport -->
     <main class="flex-1 overflow-y-auto p-6 space-y-8">
 
-      <!-- BANNER HERO SECTION (Aspect Ratio Protected) -->
+      <!-- BANNER HERO -->
       <div class="w-full dash-card p-4 sm:p-6 rounded-2xl flex items-center justify-center overflow-hidden">
         <img src="https://cdn.discordapp.com/attachments/1503357186917797978/1528363789991280702/20251231.png?ex=6a600173&is=6a5eaff3&hm=5f5a3dc2f42984b1f5394ba24f832afee82e41418020230878f38ab357e85da9&" 
-             alt="스진동 메인 타이틀" 
-             class="w-full max-w-4xl h-auto object-contain filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]">
+             alt="스진동 메인 타이틀" class="w-full max-w-4xl h-auto object-contain filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]">
       </div>
 
-      <!-- TAB 1: MAIN DASHBOARD -->
+      <!-- TAB 1: MAIN -->
       <div id="tab-main" class="tab-content space-y-8">
-        
-        <!-- Live Streams Section -->
         <div class="space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-bold text-white flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span> 치지직 라이브 방송 현황
-            </h3>
-          </div>
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span> 치지직 라이브 방송 현황
+          </h3>
           <div id="live-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="col-span-full dash-card p-8 text-center text-slate-400 rounded-2xl">
-              방송 데이터를 확인하는 중입니다...
-            </div>
+            <div class="col-span-full dash-card p-8 text-center text-slate-400 rounded-2xl">방송 데이터를 확인하는 중입니다...</div>
           </div>
         </div>
 
-        <!-- Horizontal Weekly Schedule Section -->
         <div class="space-y-4">
           <h3 class="text-lg font-bold text-white"><i class="fa-regular fa-clock text-emerald-400 mr-2"></i>이번 주 일정표</h3>
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-3" id="weekly-widget">
-            <!-- Dynamic JS -->
-          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-3" id="weekly-widget"></div>
         </div>
-
       </div>
 
-      <!-- TAB 2: MEMBERS (동아리 소개) -->
+      <!-- TAB 2: MEMBERS -->
       <div id="tab-members" class="tab-content hidden space-y-6">
         <div class="dash-card p-6 rounded-2xl">
           <h3 class="text-lg font-bold text-white mb-2">동아리 소개</h3>
           <p class="text-sm text-slate-300 leading-relaxed">
-            치지직 스타크래프트 스트리머 동아리 <strong class="text-emerald-400">스진동</strong> 대시보드입니다. 
-            멤버들의 방송 현황과 정기 컨텐츠 경기 기록 및 스케줄을 실시간 구글 스프레드시트 데이터 연동 기반으로 제공합니다.
+            치지직 스타크래프트 스트리머 동아리 <strong class="text-emerald-400">스진동</strong> 대시보드입니다.
           </p>
         </div>
-
         <h3 class="text-lg font-bold text-white">소속 멤버 정보</h3>
-        <div id="members-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          <!-- Dynamic JS -->
-        </div>
+        <div id="members-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
       </div>
 
-      <!-- TAB 3: HISTORY (컨텐츠 기록) -->
+      <!-- TAB 3: HISTORY -->
       <div id="tab-history" class="tab-content hidden space-y-4">
         <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-ranking-star text-amber-400 mr-2"></i>경기 스코어보드 기록</h3>
-        <div id="history-container" class="space-y-4">
-          <!-- Dynamic JS -->
-        </div>
+        <div id="history-container" class="space-y-4"></div>
       </div>
 
-      <!-- TAB 4: CALENDAR (동아리 스케줄) -->
+      <!-- TAB 4: CALENDAR -->
       <div id="tab-calendar" class="tab-content hidden space-y-4">
         <div class="dash-card p-6 rounded-2xl space-y-4">
           <div class="flex items-center justify-between">
@@ -159,16 +124,13 @@
           <div class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 pb-2 border-b border-slate-800">
             <div class="text-red-400">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="text-blue-400">토</div>
           </div>
-          <div id="calendar-grid" class="grid grid-cols-7 gap-2">
-            <!-- Dynamic JS -->
-          </div>
+          <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
         </div>
       </div>
 
     </main>
   </div>
 
-  <!-- JS Logic -->
   <script>
     const SPREADSHEET_ID = "1mBhZxpmt7xw8fC37cRjSaVQBSQkPXdskJNK9u1Zg_Co";
     let db = { members: [], schedules: [], history: [], details: [] };
@@ -216,20 +178,23 @@
       const grid = document.getElementById('members-grid');
       grid.innerHTML = '';
       db.members.forEach(m => {
-        if (!m.name) return;
-        const raceBadge = m.race === '테란' ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' :
-                          m.race === '저그' ? 'bg-purple-500/10 text-purple-400 border-purple-500/30' :
+        const name = m.name || m.이름;
+        if (!name) return;
+        const race = m.race || m.종족 || '프로토스';
+        const chzzkId = m.chzzk_id || m.방송국링크?.split('/').pop() || '';
+        const raceBadge = race === '테란' ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' :
+                          race === '저그' ? 'bg-purple-500/10 text-purple-400 border-purple-500/30' :
                           'bg-amber-500/10 text-amber-400 border-amber-500/30';
 
         grid.innerHTML += `
           <div class="dash-card p-4 rounded-2xl flex items-center gap-4">
-            <img src="${m.profile_img || 'https://via.placeholder.com/80'}" class="w-14 h-14 rounded-xl object-cover border border-slate-700">
+            <img src="${m.profile_img || m.프로필사진 || 'https://via.placeholder.com/80'}" class="w-14 h-14 rounded-xl object-cover border border-slate-700">
             <div>
               <div class="flex items-center gap-2 mb-1">
-                <span class="font-bold text-white">${m.name}</span>
-                <span class="text-[10px] px-2 py-0.5 rounded-full border ${raceBadge}">${m.race}</span>
+                <span class="font-bold text-white">${name}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded-full border ${raceBadge}">${race}</span>
               </div>
-              <a href="https://chzzk.naver.com/${m.chzzk_id}" target="_blank" class="text-xs text-emerald-400 hover:underline">
+              <a href="https://chzzk.naver.com/${chzzkId}" target="_blank" class="text-xs text-emerald-400 hover:underline">
                 <i class="fa-solid fa-tv mr-1"></i> 방송국 이동
               </a>
             </div>
@@ -244,9 +209,12 @@
       let liveCount = 0;
 
       for (let m of db.members) {
-        if (!m.chzzk_id) continue;
+        const chzzkId = m.chzzk_id || m.방송국링크?.split('/').pop();
+        const name = m.name || m.이름;
+        if (!chzzkId) continue;
+
         try {
-          const res = await fetch(`https://api.chzzk.naver.com/polling/v2/channels/${m.chzzk_id}/live-status`);
+          const res = await fetch(`https://api.chzzk.naver.com/polling/v2/channels/${chzzkId}/live-status`);
           const data = await res.json();
           if (data?.content?.status === 'OPEN') {
             liveCount++;
@@ -254,12 +222,12 @@
               <div class="dash-card p-5 rounded-2xl border-l-4 border-l-red-500 flex flex-col justify-between">
                 <div>
                   <div class="flex justify-between items-center mb-2">
-                    <span class="font-bold text-white">${m.name}</span>
+                    <span class="font-bold text-white">${name}</span>
                     <span class="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">LIVE</span>
                   </div>
                   <p class="text-xs text-slate-300 truncate mb-4">${data.content.liveTitle || '라이브 방송 중'}</p>
                 </div>
-                <a href="https://chzzk.naver.com/live/${m.chzzk_id}" target="_blank" class="w-full py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl text-center">
+                <a href="https://chzzk.naver.com/live/${chzzkId}" target="_blank" class="w-full py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl text-center">
                   시청하기
                 </a>
               </div>
@@ -268,7 +236,6 @@
         } catch(e){}
       }
 
-      // 방송 중인 멤버가 0명일 경우 예외 처리
       if (liveCount === 0) {
         grid.innerHTML = `
           <div class="col-span-full dash-card p-8 text-center text-slate-400 rounded-2xl border border-slate-800">
@@ -285,10 +252,15 @@
       const days = ['월', '화', '수', '목', '금', '토', '일'];
 
       days.forEach(d => {
-        const matches = db.schedules.filter(s => s.날짜?.includes(d) || s.일정내용?.includes(d));
+        const matches = db.schedules.filter(s => {
+          const dateStr = s.날짜 || s.date || '';
+          const contentStr = s.일정내용 || s.title || '';
+          return dateStr.includes(d) || contentStr.includes(d);
+        });
+
         let eventsHTML = matches.map(m => `
           <div class="bg-slate-800/80 p-2 rounded-lg text-xs border border-slate-700/80 text-slate-200">
-            <strong class="text-emerald-400">${m.시간 || ''}</strong><br>${m.일정내용}
+            <strong class="text-emerald-400">${m.시간 || m.time || ''}</strong><br>${m.일정내용 || m.title || ''}
           </div>
         `).join('');
 
@@ -308,37 +280,40 @@
       container.innerHTML = '';
 
       db.history.forEach(h => {
-        if(!h.매치구분) return;
-        const sets = db.details.filter(d => d.매치구분 === h.매치구분);
+        const matchId = h.매치구분 || h.match_id;
+        if(!matchId) return;
+
+        const sets = db.details.filter(d => (d.매치구분 || d.match_id) === matchId);
         
-        let s1 = parseInt(h.p1점수) || 0;
-        let s2 = parseInt(h.p2점수) || 0;
+        let p1 = h.p1 || h.p1_name || '팀 A';
+        let p2 = h.p2 || h.p2_name || '팀 B';
+        let s1 = parseInt(h.p1점수 || h.p1_score) || 0;
+        let s2 = parseInt(h.p2점수 || h.p2_score) || 0;
         let total = (s1 + s2) || 1;
         let p1Pct = Math.round((s1 / total) * 100);
         let p2Pct = 100 - p1Pct;
 
         let setsList = sets.map((s, i) => `
           <div class="flex justify-between items-center py-1.5 border-b border-slate-800 text-xs">
-            <span class="text-slate-400">${i+1}세트 (${s.맵 || '투혼'})</span>
-            <span>${s.p1 || ''} vs ${s.p2 || ''}</span>
-            <span class="font-bold text-emerald-400">勝: ${s.승리선수 || '-'}</span>
+            <span class="text-slate-400">${i+1}세트 (${s.맵 || s.map || '투혼'})</span>
+            <span>${s.p1 || s.p1_name || ''} vs ${s.p2 || s.p2_name || ''}</span>
+            <span class="font-bold text-emerald-400">勝: ${s.승리선수 || s.winner || '-'}</span>
           </div>
         `).join('');
 
         container.innerHTML += `
           <div class="dash-card p-6 rounded-2xl space-y-4">
             <div class="flex justify-between items-center text-xs text-slate-400">
-              <span class="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-emerald-400 font-bold">${h.카테고리 || '정기모임'}</span>
-              <span>${h.날짜 || ''}</span>
+              <span class="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-emerald-400 font-bold">${h.카테고리 || h.category || '정기모임'}</span>
+              <span>${h.날짜 || h.date || ''}</span>
             </div>
 
-            <h4 class="text-base font-bold text-white">${h.제목 || '경기 결과'}</h4>
+            <h4 class="text-base font-bold text-white">${h.제목 || h.title || '경기 결과'}</h4>
 
-            <!-- Score 게이지 바 -->
             <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800/80 space-y-2">
               <div class="flex justify-between font-bold text-sm">
-                <span class="${s1 > s2 ? 'text-emerald-400' : 'text-slate-300'}">${h.p1 || '팀 A'} (${s1})</span>
-                <span class="${s2 > s1 ? 'text-emerald-400' : 'text-slate-300'}">(${s2}) ${h.p2 || '팀 B'}</span>
+                <span class="${s1 > s2 ? 'text-emerald-400' : 'text-slate-300'}">${p1} (${s1})</span>
+                <span class="${s2 > s1 ? 'text-emerald-400' : 'text-slate-300'}">(${s2}) ${p2}</span>
               </div>
               <div class="h-2.5 w-full bg-slate-800 rounded-full overflow-hidden flex">
                 <div style="width: ${p1Pct}%" class="bg-emerald-500 h-full"></div>
@@ -377,8 +352,16 @@
       }
 
       for(let date=1; date<=lastDate; date++) {
-        const events = db.schedules.filter(s => s.날짜?.includes(`${date}일`));
-        let eventBadges = events.map(e => `<div class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] p-1 rounded-md truncate mt-1">${e.일정내용}</div>`).join('');
+        const events = db.schedules.filter(s => {
+          const dateStr = s.날짜 || s.date || '';
+          return dateStr.includes(`${date}일`);
+        });
+
+        let eventBadges = events.map(e => `
+          <div class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] p-1 rounded-md truncate mt-1">
+            ${e.일정내용 || e.title || ''}
+          </div>
+        `).join('');
 
         grid.innerHTML += `
           <div class="h-20 bg-slate-900/60 p-2 rounded-xl border border-slate-800/60 flex flex-col justify-between overflow-hidden">
