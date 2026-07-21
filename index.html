@@ -4,18 +4,27 @@ async function checkChzzkLive() {
   let liveCount = 0;
 
   for (let m of db.members) {
-    // chzzk_id, channel_id, 방송국링크 등 다양한 헤더 파싱 대응
-    const chzzkId = (m.chzzk_id || m.channel_id || (m.방송국링크 ? m.방송국링크.split('/').pop() : '') || '').trim();
+    // 풀 URL이 입력되어 있어도 32자리 ID만 정확히 추출
+    let chzzkId = (m.chzzk_id || m.channel_id || m.chzzkId || '').trim();
+    if (chzzkId.includes('/')) {
+      chzzkId = chzzkId.split('/').pop().split('?')[0];
+    }
+
     const name = (m.name || m.이름 || '').trim();
     if (!chzzkId) continue;
 
     try {
-      // 💡 CORS 우회 프록시(corsproxy.io)를 경유하여 치지직 API 호출
       const targetApi = `https://api.chzzk.naver.com/polling/v2/channels/${chzzkId}/live-status`;
-      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetApi)}`;
-      
-      const res = await fetch(proxyUrl);
-      const data = await res.json();
+      // AllOrigins 안정적인 CORS 우회 프록시 사용
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetApi)}`;
+
+      let res = await fetch(proxyUrl);
+      let data = await res.json();
+
+      // 만약 프록시 응답이 텍스트로 들어온 경우 JSON 파싱
+      if (typeof data === 'string') {
+        data = JSON.parse(data);
+      }
 
       if (data?.content?.status === 'OPEN') {
         liveCount++;
@@ -36,7 +45,7 @@ async function checkChzzkLive() {
           </div>
         `;
       }
-    } catch(e) {
+    } catch (e) {
       console.error(`Live Check Error (${name}):`, e);
     }
   }
