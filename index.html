@@ -19,9 +19,9 @@
     }
     .dash-card:hover { border-color: rgba(16, 185, 129, 0.3); }
     
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #0b0f19; }
-    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
 
     .race-terran-text { color: #60a5fa !important; }
     .race-protoss-text { color: #f59e0b !important; }
@@ -556,6 +556,8 @@
         const matches = db.schedules.filter(s => {
           const rawDate = String(s.date || s.날짜 || '').trim();
           if (!rawDate) return false;
+          const timeVal = String(s.time || s.시간 || '').trim();
+          if (!timeVal) return false; // 💡 시간이 비어있으면 제외
 
           const clean = rawDate.replace(/\s+/g, '');
           const parts = clean.split(/[-.\/]/).filter(p => p !== '');
@@ -582,7 +584,7 @@
           return `
             <div class="bg-slate-800/80 p-2.5 rounded-lg text-xs border border-slate-700/80 text-slate-200 space-y-1.5">
               <div class="flex justify-between items-center">
-                <strong class="text-emerald-400"><i class="fa-regular fa-clock text-[10px]"></i> ${timeVal || '시간미정'}</strong>
+                <strong class="text-emerald-400"><i class="fa-regular fa-clock text-[10px]"></i> ${timeVal}</strong>
               </div>
               <div class="font-bold text-white">${linkedTitle}</div>
               ${linkedScheduleMember ? `<div class="text-[11px] text-slate-300 pt-1 border-t border-slate-700/60">${linkedScheduleMember}</div>` : ''}
@@ -781,7 +783,7 @@
       renderAllHistory();
     }
 
-    // 💡 달력 그리드 렌더링 함수 (글로벌 배열에서 안전하게 일정을 매칭하도록 개선)
+    // 💡 달력 그리드 렌더링 (시간이 있는 일정만 필터링하고 모든 일정을 요약하여 표시)
     function renderCalendar() {
       const grid = document.getElementById('calendar-grid');
       grid.innerHTML = '';
@@ -794,13 +796,16 @@
       const lastDate = new Date(year, month + 1, 0).getDate();
 
       for(let i=0; i<firstDay; i++) {
-        grid.innerHTML += `<div class="h-36 bg-slate-950/30 rounded-xl"></div>`;
+        // 💡 달력 칸 높이를 시원하게 키움 (h-40)
+        grid.innerHTML += `<div class="h-40 bg-slate-950/30 rounded-xl"></div>`;
       }
 
       for(let date=1; date<=lastDate; date++) {
         const events = db.schedules.filter(s => {
           const rawDate = String(s.date || s.날짜 || '').trim();
           if (!rawDate) return false;
+          const timeVal = String(s.time || s.시간 || '').trim();
+          if (!timeVal) return false; // 💡 시간이 비어있으면 일정 없는 것으로 취급
 
           const clean = rawDate.replace(/\s+/g, '');
           const parts = clean.split(/[-.\/]/).filter(p => p !== '');
@@ -816,24 +821,28 @@
 
         let eventBadges = '';
         if (events.length > 0) {
-          const firstEvent = events[0];
-          const originalTitle = firstEvent.title || firstEvent.일정내용 || firstEvent.내용 || '';
-          const timeVal = firstEvent.time || firstEvent.시간 || '';
-          
-          let moreText = events.length > 1 ? `<span class="text-[10px] text-emerald-400 font-bold block mt-1">+ 외 ${events.length - 1}개 일정 더보기</span>` : '';
+          // 💡 해당 날짜의 모든 일정을 컴팩트한 리스트 형태로 모두 출력하고, 클릭 시 모달창 열기
+          let badgesHTML = events.map(e => {
+            const title = e.title || e.일정내용 || e.내용 || '';
+            const time = e.time || e.시간 || '';
+            return `
+              <div class="bg-slate-950/60 hover:bg-slate-950 border border-emerald-500/30 rounded px-1.5 py-1 mb-1 truncate">
+                <span class="text-emerald-400 font-bold mr-1">[${time}]</span>
+                <span class="text-white">${title}</span>
+              </div>
+            `;
+          }).join('');
 
-          // 💡 문자열 인코딩 오류 방지를 위해, 날짜 정보를 전달하여 전역 배열에서 직접 일정을 찾아오도록 수정
           eventBadges = `
-            <div onclick="openScheduleModal('${year}년 ${month + 1}월 ${date}일', ${year}, ${month + 1}, ${date})" class="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-[10px] p-2 rounded-lg mt-1 cursor-pointer transition space-y-1 group">
-              ${timeVal ? `<strong class="text-emerald-400 block font-bold"><i class="fa-regular fa-clock mr-1"></i>${timeVal}</strong>` : ''}
-              <div class="font-bold text-white group-hover:text-emerald-300 truncate">${originalTitle}</div>
-              ${moreText}
+            <div onclick="openScheduleModal('${year}년 ${month + 1}월 ${date}일', ${year}, ${month + 1}, ${date})" class="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-[10px] p-1.5 rounded-lg mt-1 cursor-pointer transition group max-h-28 overflow-y-auto">
+              ${badgesHTML}
             </div>
           `;
         }
 
+        // 💡 칸 높이를 h-40으로 넉넉하게 확장
         grid.innerHTML += `
-          <div class="h-36 bg-slate-900/60 p-2 rounded-xl border border-slate-800/60 flex flex-col justify-between overflow-hidden">
+          <div class="h-40 bg-slate-900/60 p-2 rounded-xl border border-slate-800/60 flex flex-col justify-between overflow-hidden">
             <span class="text-xs font-bold text-slate-400">${date}</span>
             <div class="overflow-y-auto flex-1">${eventBadges}</div>
           </div>
@@ -841,17 +850,20 @@
       }
     }
 
-    // 💡 모달창 열기 함수 (날짜를 기반으로 db.schedules에서 해당 일정을 안전하게 필터링)
+    // 💡 모달창 열기 함수
     function openScheduleModal(dateStr, targetY, targetM, targetD) {
       const modal = document.getElementById('schedule-modal');
       const titleEl = document.getElementById('modal-date-title');
       const listEl = document.getElementById('modal-content-list');
 
-      titleEl.innerText = `${dateStr} 일정 목록`;
+      titleEl.innerText = `${dateStr} 일정 상세 목록`;
       
       const events = db.schedules.filter(s => {
         const rawDate = String(s.date || s.날짜 || '').trim();
         if (!rawDate) return false;
+        const timeVal = String(s.time || s.시간 || '').trim();
+        if (!timeVal) return false;
+
         const clean = rawDate.replace(/\s+/g, '');
         const parts = clean.split(/[-.\/]/).filter(p => p !== '');
         if (parts.length >= 3) {
@@ -873,7 +885,7 @@
         return `
           <div class="bg-slate-950/80 p-4 rounded-xl border border-slate-800 space-y-2">
             <div class="flex items-center justify-between text-xs">
-              <span class="text-emerald-400 font-bold"><i class="fa-regular fa-clock mr-1"></i>${timeVal || '시간 미정'}</span>
+              <span class="text-emerald-400 font-bold"><i class="fa-regular fa-clock mr-1"></i>${timeVal}</span>
               <span class="text-[10px] text-slate-500">일정 #${idx + 1}</span>
             </div>
             <div class="text-sm font-bold text-white">${linkedTitle}</div>
