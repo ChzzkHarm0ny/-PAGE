@@ -231,7 +231,6 @@
       } catch (e) { console.error("Data Load Error:", e); }
     }
 
-    // 💡 연·월·일을 두 자리로 보정하여 완벽하게 정렬되도록 개선된 날짜 파싱 함수
     function parseDateToNumber(dateStr) {
       if (!dateStr) return 0;
       const clean = String(dateStr).replace(/[^0-9]/g, ''); 
@@ -289,14 +288,15 @@
 
         if (isLive && chzzkId) {
           liveCount++;
+          // 💡 방송 중 카드 전체를 클릭 가능하도록 <a> 태그로 감싸서 수정
           tempHTML += `
-            <div class="dash-card p-5 rounded-2xl border-l-4 border-l-red-500 flex flex-col justify-between hover:border-red-400 transition shadow-lg">
+            <a href="https://chzzk.naver.com/live/${chzzkId}" target="_blank" class="dash-card p-5 rounded-2xl border-l-4 border-l-red-500 flex flex-col justify-between hover:border-red-400 hover:scale-[1.02] transition shadow-lg group block">
               <div>
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center gap-3">
                     <img src="${profileImg}" class="w-10 h-10 rounded-xl object-cover border border-slate-700">
                     <div>
-                      <span class="font-bold text-white text-sm block">${name}</span>
+                      <span class="font-bold text-white text-sm block group-hover:text-emerald-400 transition">${name}</span>
                       <span class="text-[10px] text-emerald-400 font-medium">CHZZK STREAMER</span>
                     </div>
                   </div>
@@ -310,11 +310,10 @@
                 </p>
               </div>
 
-              <a href="https://chzzk.naver.com/live/${chzzkId}" target="_blank" 
-                 class="w-full mt-2 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl text-center flex items-center justify-center gap-1.5 transition">
+              <div class="w-full mt-2 py-2.5 bg-emerald-500 group-hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl text-center flex items-center justify-center gap-1.5 transition">
                 <i class="fa-solid fa-play text-[10px]"></i> 라이브 방송 시청하기
-              </a>
-            </div>
+              </div>
+            </a>
           `;
         }
       });
@@ -377,7 +376,7 @@
         return `
           <div class="dash-card rounded-2xl overflow-hidden flex flex-col justify-between group hover:border-red-500/40 transition duration-300">
             <div>
-              <div class="relative overflow-hidden aspect-video bg-slate-950">
+              <a href="${url}" target="_blank" class="relative overflow-hidden aspect-video bg-slate-950 block">
                 <img src="${thumbUrl}" alt="${title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                 <div class="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition flex items-center justify-center">
                   <div class="w-12 h-12 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition">
@@ -385,7 +384,7 @@
                   </div>
                 </div>
                 ${date ? `<span class="absolute bottom-2 right-2 px-2 py-0.5 bg-black/80 text-white text-[10px] rounded font-medium">${date}</span>` : ''}
-              </div>
+              </a>
               <div class="p-5 space-y-2">
                 <h4 class="font-bold text-white text-base line-clamp-1 group-hover:text-red-400 transition">${title}</h4>
                 ${desc ? `<p class="text-xs text-slate-300 line-clamp-2 leading-relaxed">${desc}</p>` : ''}
@@ -710,7 +709,6 @@
               </div>
               <h4 class="text-base font-bold text-white">${title}</h4>
               
-              <!-- 💡 description 내용이 존재할 경우 카드에 출력 -->
               ${description ? `
                 <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 text-xs text-slate-200 leading-relaxed">
                   <i class="fa-solid fa-gamepad text-purple-400 mr-2"></i>${description}
