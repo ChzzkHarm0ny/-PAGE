@@ -131,7 +131,7 @@
             <button onclick="filterHistory('종합게임')" id="hist-btn-종합게임" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">🎮 종합게임</button>
             <button onclick="filterHistory('기타')" id="hist-btn-기타" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">✨ 기타</button>
           </div>
-          <!-- 💡 컨텐츠 기록 정렬 토글 버튼 -->
+          <!-- 컨텐츠 기록 정렬 토글 버튼 -->
           <button onclick="toggleHistorySort()" id="history-sort-btn" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5">
             <i class="fa-solid fa-arrow-down-wide-short"></i> <span id="history-sort-text">최신순</span>
           </button>
@@ -149,7 +149,7 @@
             </h3>
             <p class="text-sm text-slate-300">스진동의 한 주간 소식과 하이라이트를 담은 유튜브 영상 모음입니다.</p>
           </div>
-          <!-- 💡 주간스진동 정렬 토글 버튼 -->
+          <!-- 주간스진동 정렬 토글 버튼 -->
           <button onclick="toggleYoutubeSort()" id="youtube-sort-btn" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5">
             <i class="fa-solid fa-arrow-down-wide-short"></i> <span id="youtube-sort-text">최신순</span>
           </button>
@@ -188,11 +188,10 @@
       protoss: "https://cdn.discordapp.com/attachments/1528721011732643951/1528793444435099648/WrK9L73w0c_CY7HVAOuXzdRg4yS7OBrMXtBIs1qEGHnPZPTeH7N8t1Mzb8sIRkcSkLSi0v47wBiONdp35r10WIE-tmRf8d4EN2gUaMBVgOR0OYFJj_kPILzCITBFwL6SMK05jX0r1pnJiNIp2t5PjQ.webp?ex=6a5f9758&is=6a5e45d8&hm=63492a3a94779f80643e3c3f5a1f546e5df60b4da678e33ae2b9e260b58b76c2&"
     };
 
-    let db = { members: [], schedules: [], historyMatch: [], historyMulti: [], weeklyYoutube: [], details: [] };
+    let db = { members: [], schedules: [], historyMatch: [], weeklyYoutube: [], details: [] };
     let currentCategoryFilter = 'all';
     let currentCalDate = new Date();
 
-    // 💡 정렬 상태 변수 추가 ('desc': 최신순, 'asc': 과거순)
     let historySortOrder = 'desc';
     let youtubeSortOrder = 'desc';
 
@@ -220,7 +219,6 @@
         db.members = await fetchCSV('MEMBERS');
         db.schedules = await fetchCSV('Schedules');
         db.historyMatch = await fetchCSV('Contents_History');
-        db.historyMulti = await fetchCSV('History_MultiGame');
         db.weeklyYoutube = await fetchCSV('WEEKLY_YOUTUBE').catch(() => []);
         db.details = await fetchCSV('Match_Details');
 
@@ -233,19 +231,19 @@
       } catch (e) { console.error("Data Load Error:", e); }
     }
 
-    // 💡 날짜 문자열을 비교 가능한 숫자(Timestamp)로 변환하는 유틸리티 함수
     function parseDateToNumber(dateStr) {
       if (!dateStr) return 0;
-      const clean = String(dateStr).replace(/[^0-9]/g, ''); // 숫자만 추출 (예: 2026-06-05 -> 20260605)
+      const clean = String(dateStr).replace(/[^0-9]/g, ''); 
       if (clean.length >= 8) {
         return parseInt(clean.substring(0, 8), 10);
+      } else if (clean.length === 7) {
+        return parseInt(clean, 10);
       } else if (clean.length >= 6) {
         return parseInt(clean + '01', 10);
       }
       return 0;
     }
 
-    // 💡 컨텐츠 기록 정렬 토글 함수
     function toggleHistorySort() {
       historySortOrder = historySortOrder === 'desc' ? 'asc' : 'desc';
       const textEl = document.getElementById('history-sort-text');
@@ -255,7 +253,6 @@
       renderAllHistory();
     }
 
-    // 💡 주간스진동 정렬 토글 함수
     function toggleYoutubeSort() {
       youtubeSortOrder = youtubeSortOrder === 'desc' ? 'asc' : 'desc';
       const textEl = document.getElementById('youtube-sort-text');
@@ -358,7 +355,6 @@
         return;
       }
 
-      // 💡 주간스진동 날짜순 정렬 적용
       const sortedYoutube = [...db.weeklyYoutube].sort((a, b) => {
         const dateA = parseDateToNumber(a.date || a.날짜);
         const dateB = parseDateToNumber(b.date || b.날짜);
@@ -600,27 +596,12 @@
       container.innerHTML = '';
 
       try {
-        const multiMatchIds = new Set(
-          (db.historyMulti || [])
-            .map(g => String(g.match_id || g.매치구분 || g.ID || '').trim().toLowerCase())
-            .filter(id => id !== '')
-        );
-
-        // 1. Contents_History 데이터 필터링 및 날짜순 정렬
         let filteredMatches = (db.historyMatch || []).filter(h => {
           const cat = String(h.category || h.카테고리 || '').trim();
           if (currentCategoryFilter !== 'all' && cat !== currentCategoryFilter) return false;
-
-          const matchId = String(h.match_id || h.매치구분 || h.ID || '').trim();
-          if (!matchId) return false;
-
-          const rawS1 = h.p1_score !== undefined && h.p1_score !== '' ? h.p1_score : (h.p1점수 !== undefined ? h.p1점수 : null);
-          const rawS2 = h.p2_score !== undefined && h.p2_score !== '' ? h.p2_score : (h.p2점수 !== undefined ? h.p2점수 : null);
-          const hasScore = rawS1 !== null && rawS2 !== null && rawS1 !== '' && rawS2 !== '' && !isNaN(parseInt(rawS1)) && !isNaN(parseInt(rawS2));
-          
-          if (currentCategoryFilter === 'all' && multiMatchIds.has(matchId.toLowerCase()) && !hasScore) {
-            return false;
-          }
+          const title = h.title || h.제목 || '';
+          const p1 = h.p1_name || h.p1 || '';
+          if (!title && !p1) return false;
           return true;
         });
 
@@ -631,16 +612,24 @@
         });
 
         let matchCardsHTML = filteredMatches.map(h => {
-          const cat = String(h.category || h.카테고리 || '').trim();
+          const cat = String(h.category || h.카테고리 || '정기모임').trim();
           const matchId = String(h.match_id || h.매치구분 || h.ID || '').trim();
+          const title = h.title || h.제목 || '모임 결과';
+          const date = h.date || h.날짜 || '';
+          const titleImg = h.title_img || h.대표이미지 || '';
+          const description = h.description || h.설명 || '';
+          const rawMembers = h.member || h.참여멤버 || '';
+          const linkedMembers = convertMemberNameToLink(rawMembers);
+          const vodUrl = h.vod_url || h.vod || '';
+
           const rawS1 = h.p1_score !== undefined && h.p1_score !== '' ? h.p1_score : (h.p1점수 !== undefined ? h.p1점수 : null);
           const rawS2 = h.p2_score !== undefined && h.p2_score !== '' ? h.p2_score : (h.p2점수 !== undefined ? h.p2점수 : null);
           const hasScore = rawS1 !== null && rawS2 !== null && rawS1 !== '' && rawS2 !== '' && !isNaN(parseInt(rawS1)) && !isNaN(parseInt(rawS2));
 
-          const sets = (db.details || []).filter(d => String(d.match_id || d.매치구분 || d.ID || '').trim().toLowerCase() === matchId.toLowerCase());
+          const sets = (db.details || []).filter(d => matchId && String(d.match_id || d.매치구분 || d.ID || '').trim().toLowerCase() === matchId.toLowerCase());
           
-          let p1 = h.p1_name || h.p1 || h.팀1 || h.팀1명 || '팀 A';
-          let p2 = h.p2_name || h.p2 || h.팀2 || h.팀2명 || '팀 B';
+          let p1 = h.p1_name || h.p1 || h.팀1 || h.팀1명 || '';
+          let p2 = h.p2_name || h.p2 || h.팀2 || h.팀2명 || '';
           
           let p1Icon = getRaceIconOnly(p1, h.p1_race);
           let p2Icon = getRaceIconOnly(p2, h.p2_race);
@@ -711,51 +700,12 @@
           return `
             <div class="dash-card p-6 rounded-2xl space-y-4">
               <div class="flex justify-between items-center text-xs text-slate-400">
-                <span class="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-emerald-400 font-bold">${cat || '정기모임'}</span>
-                <span>${h.date || h.날짜 || ''}</span>
-              </div>
-              <h4 class="text-base font-bold text-white">${h.title || h.제목 || '모임 결과'}</h4>
-              ${scoreHTML}
-              ${sets.length > 0 ? `
-                <details class="group">
-                  <summary class="text-xs text-slate-400 cursor-pointer hover:text-emerald-400 font-medium">▶ 세부 라운드 스코어 열기 (${sets.length}개 세트)</summary>
-                  <div class="mt-3 p-3 bg-slate-950/50 rounded-xl border border-slate-800/60">${setsList}</div>
-                </details>
-              ` : ''}
-            </div>
-          `;
-        }).join('');
-
-        // 2. History_MultiGame 데이터 필터링 및 날짜순 정렬
-        let filteredMulti = (db.historyMulti || []).filter(g => {
-          const cat = String(g.category || g.카테고리 || '종합게임').trim();
-          if (currentCategoryFilter !== 'all' && cat !== currentCategoryFilter) return false;
-          return true;
-        });
-
-        filteredMulti.sort((a, b) => {
-          const dateA = parseDateToNumber(a.date || a.날짜);
-          const dateB = parseDateToNumber(b.date || b.날짜);
-          return historySortOrder === 'desc' ? dateB - dateA : dateA - dateB;
-        });
-
-        let multiCardsHTML = filteredMulti.map(g => {
-          const cat = String(g.category || g.카테고리 || '종합게임').trim();
-          const title = g.title || g.제목 || '';
-          const date = g.date || g.날짜 || '';
-          const titleImg = g.title_img || g.대표이미지 || '';
-          const description = g.description || g.설명 || '';
-          const rawMembers = g.member || g.참여멤버 || '';
-          const linkedMembers = convertMemberNameToLink(rawMembers);
-
-          return `
-            <div class="dash-card p-6 rounded-2xl space-y-4">
-              <div class="flex justify-between items-center text-xs text-slate-400">
-                <span class="px-2.5 py-1 rounded-full bg-purple-950 border border-purple-800 text-purple-400 font-bold">${cat}</span>
+                <span class="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-emerald-400 font-bold">${cat}</span>
                 <span>${date}</span>
               </div>
-
               <h4 class="text-base font-bold text-white">${title}</h4>
+              
+              ${scoreHTML}
 
               ${titleImg ? `<img src="${titleImg}" class="w-full h-48 object-cover rounded-xl border border-slate-800 shadow">` : ''}
 
@@ -771,16 +721,29 @@
                   <div class="flex flex-wrap gap-1">${linkedMembers}</div>
                 </div>
               ` : ''}
+
+              ${sets.length > 0 ? `
+                <details class="group">
+                  <summary class="text-xs text-slate-400 cursor-pointer hover:text-emerald-400 font-medium">▶ 세부 라운드 스코어 열기 (${sets.length}개 세트)</summary>
+                  <div class="mt-3 p-3 bg-slate-950/50 rounded-xl border border-slate-800/60">${setsList}</div>
+                </details>
+              ` : ''}
+
+              ${vodUrl ? `
+                <div class="pt-2">
+                  <a href="${vodUrl}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition">
+                    <i class="fa-brands fa-youtube"></i> 다시보기 시청
+                  </a>
+                </div>
+              ` : ''}
             </div>
           `;
         }).join('');
 
-        const combinedHTML = matchCardsHTML + multiCardsHTML;
-
-        if (!combinedHTML.trim()) {
+        if (!matchCardsHTML.trim()) {
           container.innerHTML = `<div class="dash-card p-8 text-center text-slate-400 rounded-2xl border border-slate-800 text-xs">해당 카테고리의 컨텐츠 기록이 없습니다.</div>`;
         } else {
-          container.innerHTML = combinedHTML;
+          container.innerHTML = matchCardsHTML;
         }
       } catch (e) {
         console.error("renderAllHistory Error:", e);
