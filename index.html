@@ -177,6 +177,19 @@
     </main>
   </div>
 
+  <!-- 💡 일정 상세 보기 팝업 모달 -->
+  <div id="schedule-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="dash-card bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl relative">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 id="modal-date-title" class="text-base font-bold text-emerald-400">일정 상세</h3>
+        <button onclick="closeScheduleModal()" class="text-slate-400 hover:text-white text-lg font-bold px-2">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div id="modal-content-list" class="space-y-3 max-h-[60vh] overflow-y-auto pr-1"></div>
+    </div>
+  </div>
+
   <script>
     const SPREADSHEET_ID = "1mBhZxpmt7xw8fC37cRjSaVQBSQkPXdskJNK9u1Zg_Co";
     
@@ -780,7 +793,6 @@
       const lastDate = new Date(year, month + 1, 0).getDate();
 
       for(let i=0; i<firstDay; i++) {
-        // 💡 달력 칸 높이를 키웠습니다 (h-28 -> h-36)
         grid.innerHTML += `<div class="h-36 bg-slate-950/30 rounded-xl"></div>`;
       }
 
@@ -801,23 +813,27 @@
           return false;
         });
 
-        let eventBadges = events.map(e => {
-          const originalTitle = e.title || e.일정내용 || e.내용 || '';
-          const linkedTitle = convertMemberNameToLink(originalTitle);
-          const timeVal = e.time || e.시간 || '';
-          const scheduleMember = (e.member || e.참여멤버 || '').trim();
-          const linkedScheduleMember = convertMemberNameToLink(scheduleMember);
+        // 💡 여러 일정이 있을 때 요약 형태(+추가 일정 개수)로 보여주고 클릭 시 모달 열기
+        let eventBadges = '';
+        if (events.length > 0) {
+          const firstEvent = events[0];
+          const originalTitle = firstEvent.title || firstEvent.일정내용 || firstEvent.내용 || '';
+          const timeVal = firstEvent.time || firstEvent.시간 || '';
+          
+          let moreText = events.length > 1 ? `<span class="text-[10px] text-emerald-400 font-bold block mt-1">+ 외 ${events.length - 1개의}개 일정 더보기</span>` : '';
 
-          return `
-            <div class="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-[10px] p-1.5 rounded-md mt-1 leading-relaxed space-y-0.5">
-              ${timeVal ? `<strong class="text-emerald-400 block font-bold">${timeVal}</strong>` : ''}
-              <div>${linkedTitle}</div>
-              ${linkedScheduleMember ? `<div class="text-[9px] text-slate-300 pt-0.5 border-t border-slate-700/50">${linkedScheduleMember}</div>` : ''}
+          // 이벤트를 JSON 형태로 안전하게 전달하기 위해 문자열 처리
+          const encodedEvents = encodeURIComponent(JSON.stringify(events));
+
+          eventBadges = `
+            <div onclick="openScheduleModal('${year}년 ${month + 1}월 ${date}일', '${encodedEvents}')" class="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-[10px] p-2 rounded-lg mt-1 cursor-pointer transition space-y-1 group">
+              ${timeVal ? `<strong class="text-emerald-400 block font-bold"><i class="fa-regular fa-clock mr-1"></i>${timeVal}</strong>` : ''}
+              <div class="font-bold text-white group-hover:text-emerald-300 truncate">${originalTitle}</div>
+              ${moreText}
             </div>
           `;
-        }).join('');
+        }
 
-        // 💡 달력 날짜 칸 높이를 h-36(기존 h-28에서 확장)으로 변경하여 웬만한 일정은 스크롤 없이 표시되도록 수정
         grid.innerHTML += `
           <div class="h-36 bg-slate-900/60 p-2 rounded-xl border border-slate-800/60 flex flex-col justify-between overflow-hidden">
             <span class="text-xs font-bold text-slate-400">${date}</span>
@@ -825,6 +841,49 @@
           </div>
         `;
       }
+    }
+
+    // 💡 모달창 열기 함수
+    function openScheduleModal(dateStr, encodedJson) {
+      const modal = document.getElementById('schedule-modal');
+      const titleEl = document.getElementById('modal-date-title');
+      const listEl = document.getElementById('modal-content-list');
+
+      titleEl.innerText = `${dateStr} 일정 목록`;
+      
+      const events = JSON.parse(decodeURIComponent(encodedJson));
+
+      listEl.innerHTML = events.map((e, idx) => {
+        const originalTitle = e.title || e.일정내용 || e.내용 || '';
+        const linkedTitle = convertMemberNameToLink(originalTitle);
+        const timeVal = e.time || e.시간 || '';
+        const scheduleMember = (e.member || e.참여멤버 || '').trim();
+        const linkedScheduleMember = convertMemberNameToLink(scheduleMember);
+
+        return `
+          <div class="bg-slate-950/80 p-4 rounded-xl border border-slate-800 space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-emerald-400 font-bold"><i class="fa-regular fa-clock mr-1"></i>${timeVal || '시간 미정'}</span>
+              <span class="text-[10px] text-slate-500">일정 #${idx + 1}</span>
+            </div>
+            <div class="text-sm font-bold text-white">${linkedTitle}</div>
+            ${linkedScheduleMember ? `
+              <div class="pt-2 border-t border-slate-800/80 text-xs space-y-1">
+                <span class="text-slate-400 font-semibold block">참여 멤버</span>
+                <div class="flex flex-wrap gap-1">${linkedScheduleMember}</div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+
+      modal.classList.remove('hidden');
+    }
+
+    // 💡 모달창 닫기 함수
+    function closeScheduleModal() {
+      const modal = document.getElementById('schedule-modal');
+      modal.classList.add('hidden');
     }
 
     function changeMonth(d) {
