@@ -177,7 +177,7 @@
     </main>
   </div>
 
-  <!-- 💡 일정 상세 보기 팝업 모달 -->
+  <!-- 일정 상세 보기 팝업 모달 -->
   <div id="schedule-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="dash-card bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl relative">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -781,6 +781,7 @@
       renderAllHistory();
     }
 
+    // 💡 달력 그리드 렌더링 함수 (글로벌 배열에서 안전하게 일정을 매칭하도록 개선)
     function renderCalendar() {
       const grid = document.getElementById('calendar-grid');
       grid.innerHTML = '';
@@ -813,20 +814,17 @@
           return false;
         });
 
-        // 💡 여러 일정이 있을 때 요약 형태(+추가 일정 개수)로 보여주고 클릭 시 모달 열기
         let eventBadges = '';
         if (events.length > 0) {
           const firstEvent = events[0];
           const originalTitle = firstEvent.title || firstEvent.일정내용 || firstEvent.내용 || '';
           const timeVal = firstEvent.time || firstEvent.시간 || '';
           
-          let moreText = events.length > 1 ? `<span class="text-[10px] text-emerald-400 font-bold block mt-1">+ 외 ${events.length - 1개의}개 일정 더보기</span>` : '';
+          let moreText = events.length > 1 ? `<span class="text-[10px] text-emerald-400 font-bold block mt-1">+ 외 ${events.length - 1}개 일정 더보기</span>` : '';
 
-          // 이벤트를 JSON 형태로 안전하게 전달하기 위해 문자열 처리
-          const encodedEvents = encodeURIComponent(JSON.stringify(events));
-
+          // 💡 문자열 인코딩 오류 방지를 위해, 날짜 정보를 전달하여 전역 배열에서 직접 일정을 찾아오도록 수정
           eventBadges = `
-            <div onclick="openScheduleModal('${year}년 ${month + 1}월 ${date}일', '${encodedEvents}')" class="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-[10px] p-2 rounded-lg mt-1 cursor-pointer transition space-y-1 group">
+            <div onclick="openScheduleModal('${year}년 ${month + 1}월 ${date}일', ${year}, ${month + 1}, ${date})" class="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-[10px] p-2 rounded-lg mt-1 cursor-pointer transition space-y-1 group">
               ${timeVal ? `<strong class="text-emerald-400 block font-bold"><i class="fa-regular fa-clock mr-1"></i>${timeVal}</strong>` : ''}
               <div class="font-bold text-white group-hover:text-emerald-300 truncate">${originalTitle}</div>
               ${moreText}
@@ -843,15 +841,27 @@
       }
     }
 
-    // 💡 모달창 열기 함수
-    function openScheduleModal(dateStr, encodedJson) {
+    // 💡 모달창 열기 함수 (날짜를 기반으로 db.schedules에서 해당 일정을 안전하게 필터링)
+    function openScheduleModal(dateStr, targetY, targetM, targetD) {
       const modal = document.getElementById('schedule-modal');
       const titleEl = document.getElementById('modal-date-title');
       const listEl = document.getElementById('modal-content-list');
 
       titleEl.innerText = `${dateStr} 일정 목록`;
       
-      const events = JSON.parse(decodeURIComponent(encodedJson));
+      const events = db.schedules.filter(s => {
+        const rawDate = String(s.date || s.날짜 || '').trim();
+        if (!rawDate) return false;
+        const clean = rawDate.replace(/\s+/g, '');
+        const parts = clean.split(/[-.\/]/).filter(p => p !== '');
+        if (parts.length >= 3) {
+          const parsedY = parseInt(parts[0], 10);
+          const parsedM = parseInt(parts[1], 10);
+          const parsedD = parseInt(parts[2], 10);
+          if (parsedY === targetY && parsedM === targetM && parsedD === targetD) return true;
+        }
+        return false;
+      });
 
       listEl.innerHTML = events.map((e, idx) => {
         const originalTitle = e.title || e.일정내용 || e.내용 || '';
@@ -880,7 +890,6 @@
       modal.classList.remove('hidden');
     }
 
-    // 💡 모달창 닫기 함수
     function closeScheduleModal() {
       const modal = document.getElementById('schedule-modal');
       modal.classList.add('hidden');
