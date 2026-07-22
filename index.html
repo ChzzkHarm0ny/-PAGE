@@ -94,7 +94,7 @@
         <div class="space-y-4">
           <h3 class="text-lg font-bold text-white flex items-center justify-between">
             <span class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span> 라이브 방송 현황
+              <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span> 시트 기준 라이브 방송 현황
             </span>
             <span id="last-sync-time" class="text-[11px] text-slate-500 font-normal"></span>
           </h3>
@@ -225,7 +225,7 @@
         const profileImg = m.profile_img || m.프로필사진 || 'https://via.placeholder.com/80';
         
         const isLiveRaw = String(m.is_live || m.IS_LIVE || m.방송중 || m['is live'] || '').trim().toUpperCase();
-        const isLive = (isLiveRaw === 'TRUE' || isLiveRaw === 'TRUE' || isLiveRaw === '1' || isLiveRaw === 'YES' || isLiveRaw === 'T');
+        const isLive = (isLiveRaw === 'TRUE' || isLiveRaw === '1' || isLiveRaw === 'YES' || isLiveRaw === 'T');
         const liveTitle = m.live_title || m.LIVE_TITLE || m.방송제목 || m['live title'] || '라이브 방송 중';
 
         if (isLive && chzzkId) {
@@ -339,7 +339,7 @@
     function getRaceIconOnly(text, explicitRace) {
       const raceStr = String(explicitRace || text || '').toLowerCase();
       if (raceStr.includes('테란') || raceStr.includes('terran') || raceStr === 't') return RACE_ICONS.terran;
-      if (raceStr.includes('프로토스') || raceStr.includes('토스') || raceStr.includes('protoss') || raceStr === 'p') return RACE_ICONS.protoss;
+      if (raceStr.includes('프로토스') || raceStr.includes('토스') || raceStr === 'protoss') || raceStr === 'p') return RACE_ICONS.protoss;
       if (raceStr.includes('저그') || raceStr.includes('zerg') || raceStr === 'z') return RACE_ICONS.zerg;
 
       const matchedMember = db.members.find(m => (m.name || m.이름 || '').trim() === String(text).trim());
@@ -534,12 +534,29 @@
       const container = document.getElementById('container-history');
       container.innerHTML = '';
 
+      // 💡 match_id가 존재하는 종합게임들의 ID를 미리 수집하여 중복 방지 필터링에 활용
+      const multiMatchIds = new Set(
+        db.historyMulti
+          .map(g => String(g.match_id || g.매치구분 || g.ID || '').trim().toLowerCase())
+          .filter(id => id !== '')
+      );
+
       let matchCardsHTML = db.historyMatch.map(h => {
         const cat = String(h.category || h.카테고리 || '').trim();
         if (currentCategoryFilter !== 'all' && cat !== currentCategoryFilter) return '';
 
         const matchId = String(h.match_id || h.매치구분 || h.ID || '').trim();
         if (!matchId) return '';
+
+        // 💡 만약 Contents_History의 match_id가 History_MultiGame에도 존재하고,
+        // 현재 필터가 'all'이면서 해당 행에 스코어가 없다면 Contents_History 쪽 출력을 스킵하여 중복을 막습니다.
+        const rawS1 = h.p1_score !== undefined && h.p1_score !== '' ? h.p1_score : (h.p1점수 !== undefined ? h.p1점수 : null);
+        const rawS2 = h.p2_score !== undefined && h.p2_score !== '' ? h.p2_score : (h.p2점수 !== undefined ? h.p2점수 : null);
+        const hasScore = rawS1 !== null && rawS2 !== null && rawS1 !== '' && rawS2 !== '' && !isNaN(parseInt(rawS1)) && !isNaN(parseInt(rawS2));
+        
+        if (currentCategoryFilter === 'all' && multiMatchIds.has(matchId.toLowerCase()) && !hasScore) {
+          return '';
+        }
 
         const sets = db.details.filter(d => String(d.match_id || d.매치구분 || d.ID || '').trim().toLowerCase() === matchId.toLowerCase());
         
@@ -548,11 +565,6 @@
         
         let p1Icon = getRaceIconOnly(p1, h.p1_race);
         let p2Icon = getRaceIconOnly(p2, h.p2_race);
-
-        let rawS1 = h.p1_score !== undefined && h.p1_score !== '' ? h.p1_score : (h.p1점수 !== undefined ? h.p1점수 : null);
-        let rawS2 = h.p2_score !== undefined && h.p2_score !== '' ? h.p2_score : (h.p2점수 !== undefined ? h.p2점수 : null);
-
-        const hasScore = rawS1 !== null && rawS2 !== null && rawS1 !== '' && rawS2 !== '' && !isNaN(parseInt(rawS1)) && !isNaN(parseInt(rawS2));
 
         let scoreHTML = '';
         if (hasScore) {
@@ -637,6 +649,7 @@
 
       let multiCardsHTML = db.historyMulti.map(g => {
         const cat = String(g.category || g.카테고리 || '종합게임').trim();
+        // 💡 사용자가 '종합게임'이 아닌 '정기모임' 탭에 작성했더라도 카테고리 필터링이 맞게 작동하도록 보정
         if (currentCategoryFilter !== 'all' && cat !== currentCategoryFilter) return '';
 
         const title = g.title || g.제목 || '';
