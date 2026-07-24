@@ -28,10 +28,10 @@
     .race-zerg-text { color: #ef4444 !important; }
   </style>
 </head>
-<body class="flex h-screen overflow-hidden">
+<body class="flex flex-col md:flex-row h-screen overflow-hidden">
 
-  <!-- SIDEBAR -->
-  <aside class="w-64 bg-slate-900/90 border-r border-slate-800/80 flex flex-col justify-between hidden md:flex z-20">
+  <!-- PC SIDEBAR -->
+  <aside class="w-64 bg-slate-900/90 border-r border-slate-800/80 flex-col justify-between hidden md:flex z-20">
     <div>
       <div class="h-20 flex items-center px-6 gap-3 border-b border-slate-800/60">
         <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-300 flex items-center justify-center font-black text-slate-950 text-xl shadow-lg shadow-emerald-500/20">S</div>
@@ -66,9 +66,24 @@
     </div>
   </aside>
 
+  <!-- MOBILE TOP NAVIGATION BAR -->
+  <div class="md:hidden bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between z-30 shrink-0">
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-emerald-500 to-teal-300 flex items-center justify-center font-black text-slate-950 text-sm">S</div>
+      <h1 class="font-extrabold text-white text-base">스진동</h1>
+    </div>
+  </div>
+  <div class="md:hidden bg-slate-950/90 border-b border-slate-800/80 px-2 py-2 flex items-center gap-2 overflow-x-auto z-20 shrink-0 whitespace-nowrap">
+    <button onclick="switchTab('main')" id="mob-nav-main" class="mob-nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 transition">메인</button>
+    <button onclick="switchTab('members')" id="mob-nav-members" class="mob-nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:bg-slate-800 transition">동아리소개</button>
+    <button onclick="switchTab('history')" id="mob-nav-history" class="mob-nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:bg-slate-800 transition">컨텐츠기록</button>
+    <button onclick="switchTab('weekly')" id="mob-nav-weekly" class="mob-nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:bg-slate-800 transition">주간스진동</button>
+    <button onclick="switchTab('calendar')" id="mob-nav-calendar" class="mob-nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:bg-slate-800 transition">스케줄</button>
+  </div>
+
   <!-- MAIN VIEW -->
   <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-    <header class="h-20 border-b border-slate-800/60 bg-slate-900/40 backdrop-blur-md px-6 flex items-center justify-between z-10">
+    <header class="h-20 border-b border-slate-800/60 bg-slate-900/40 backdrop-blur-md px-6 hidden md:flex items-center justify-between z-10">
       <h2 id="page-title" class="text-xl font-bold text-white">메인 대시보드</h2>
       
       <div class="flex items-center gap-3">
@@ -81,11 +96,11 @@
       </div>
     </header>
 
-    <main class="flex-1 overflow-y-auto p-6 space-y-8">
+    <main class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-8">
 
-      <!-- BANNER HERO -->
+      <!-- BANNER HERO (업데이트된 영구 타이틀 이미지 적용) -->
       <div id="hero-banner" class="w-full dash-card p-4 sm:p-6 rounded-2xl flex items-center justify-center overflow-hidden">
-        <img src="https://cdn.discordapp.com/attachments/1503357186917797978/1528363789991280702/20251231.png?ex=6a600173&is=6a5eaff3&hm=5f5a3dc2f42984b1f5394ba24f832afee82e41418020230878f38ab357e85da9&" 
+        <img src="https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/refs/heads/main/images/20251231.png" 
              alt="스진동 메인 타이틀" class="w-full max-w-4xl h-auto object-contain filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]">
       </div>
 
@@ -124,12 +139,12 @@
       <div id="tab-history" class="tab-content hidden space-y-8">
         <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800">
           <div class="flex flex-wrap gap-2">
-            <button onclick="filterHistory('all')" id="hist-btn-all" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 transition">전체 보기</button>
-            <button onclick="filterHistory('정기모임')" id="hist-btn-정기모임" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">📅 정기모임</button>
-            <button onclick="filterHistory('종족최강전')" id="hist-btn-종족최강전" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">⚔️ 종족최강전</button>
-            <button onclick="filterHistory('교체혈전')" id="hist-btn-교체혈전" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">🔥 교체혈전</button>
-            <button onclick="filterHistory('종합게임')" id="hist-btn-종합게임" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">🎮 종합게임</button>
-            <button onclick="filterHistory('기타')" id="hist-btn-기타" class="hist-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">✨ 기타</button>
+            <button onclick="filterHistory('all')" id="hist-btn-all" class="hist-filter-btn px-3 sm:px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 transition">전체 보기</button>
+            <button onclick="filterHistory('정기모임')" id="hist-btn-정기모임" class="hist-filter-btn px-3 sm:px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">📅 정기모임</button>
+            <button onclick="filterHistory('종족최강전')" id="hist-btn-종족최강전" class="hist-filter-btn px-3 sm:px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">⚔️ 종족최강전</button>
+            <button onclick="filterHistory('교체혈전')" id="hist-btn-교체혈전" class="hist-filter-btn px-3 sm:px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">🔥 교체혈전</button>
+            <button onclick="filterHistory('종합게임')" id="hist-btn-종합게임" class="hist-filter-btn px-3 sm:px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">🎮 종합게임</button>
+            <button onclick="filterHistory('기타')" id="hist-btn-기타" class="hist-filter-btn px-3 sm:px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">✨ 기타</button>
           </div>
           <button onclick="toggleHistorySort()" id="history-sort-btn" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5">
             <i class="fa-solid fa-arrow-down-wide-short"></i> <span id="history-sort-text">최신순</span>
@@ -159,18 +174,18 @@
 
       <!-- TAB 4: CALENDAR -->
       <div id="tab-calendar" class="tab-content hidden space-y-4">
-        <div class="dash-card p-6 rounded-2xl space-y-4">
+        <div class="dash-card p-4 sm:p-6 rounded-2xl space-y-4 overflow-x-auto">
           <div class="flex items-center justify-between">
-            <h3 id="cal-month-title" class="text-xl font-bold text-white">2026년 8월</h3>
+            <h3 id="cal-month-title" class="text-lg sm:text-xl font-bold text-white">2026년 8월</h3>
             <div class="flex gap-2">
               <button onclick="changeMonth(-1)" class="px-3 py-1.5 bg-slate-800 text-xs rounded-lg hover:bg-slate-700 border border-slate-700">이전달</button>
               <button onclick="changeMonth(1)" class="px-3 py-1.5 bg-slate-800 text-xs rounded-lg hover:bg-slate-700 border border-slate-700">다음달</button>
             </div>
           </div>
-          <div class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 pb-2 border-b border-slate-800">
+          <div class="grid grid-cols-7 gap-1 sm:gap-2 text-center text-xs font-bold text-slate-400 pb-2 border-b border-slate-800 min-w-[320px]">
             <div class="text-red-400">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="text-blue-400">토</div>
           </div>
-          <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
+          <div id="calendar-grid" class="grid grid-cols-7 gap-1 sm:gap-2 min-w-[320px]"></div>
         </div>
       </div>
 
@@ -193,7 +208,7 @@
   <script>
     const SPREADSHEET_ID = "1mBhZxpmt7xw8fC37cRjSaVQBSQkPXdskJNK9u1Zg_Co";
     
-const RACE_ICONS = {
+    const RACE_ICONS = {
       terran: "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/refs/heads/main/images/테란마크.webp",
       zerg: "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/refs/heads/main/images/저그마크.webp",
       protoss: "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/refs/heads/main/images/프로토스마크.webp"
@@ -240,6 +255,13 @@ const RACE_ICONS = {
         renderCalendar();
         renderLiveStatusFromSheet();
       } catch (e) { console.error("Data Load Error:", e); }
+    }
+
+    function getProfileImgUrl(name, customImg) {
+      if (customImg && String(customImg).trim() !== '') return customImg;
+      if (!name) return 'https://via.placeholder.com/80';
+      const cleanName = String(name).trim();
+      return `https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/profiles/${cleanName}.png`;
     }
 
     function parseDateToNumber(dateStr) {
@@ -291,7 +313,7 @@ const RACE_ICONS = {
           chzzkId = chzzkId.split('/').pop().split('?')[0];
         }
 
-        const profileImg = m.profile_img || m.프로필사진 || 'https://via.placeholder.com/80';
+        const profileImg = getProfileImgUrl(name, m.profile_img || m.프로필사진);
         
         const isLiveRaw = String(m.is_live || m.IS_LIVE || m.방송중 || m['is live'] || '').trim().toUpperCase();
         const isLive = (isLiveRaw === 'TRUE' || isLiveRaw === '1' || isLiveRaw === 'YES' || isLiveRaw === 'T');
@@ -446,15 +468,27 @@ const RACE_ICONS = {
 
     function switchTab(id) {
       document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+      
       document.querySelectorAll('.nav-btn').forEach(b => {
         b.classList.remove('bg-emerald-500/10', 'text-emerald-400', 'border', 'border-emerald-500/20');
         b.classList.add('text-slate-400');
       });
 
+      document.querySelectorAll('.mob-nav-btn').forEach(b => {
+        b.classList.remove('bg-emerald-500/10', 'text-emerald-400', 'border', 'border-emerald-500/20');
+        b.classList.add('text-slate-400');
+      });
+
       document.getElementById(`tab-${id}`).classList.remove('hidden');
+      
       const activeNav = document.getElementById(`nav-${id}`);
       if (activeNav) {
         activeNav.classList.add('bg-emerald-500/10', 'text-emerald-400', 'border', 'border-emerald-500/20');
+      }
+
+      const activeMobNav = document.getElementById(`mob-nav-${id}`);
+      if (activeMobNav) {
+        activeMobNav.classList.add('bg-emerald-500/10', 'text-emerald-400', 'border', 'border-emerald-500/20');
       }
       
       const heroBanner = document.getElementById('hero-banner');
@@ -485,6 +519,7 @@ const RACE_ICONS = {
         let memberCardsHTML = matchedMembers.map(m => {
           const name = (m.name || m.이름 || '').trim();
           const chzzkId = (m.chzzk_id || m.channel_id || (m.방송국링크 ? m.방송국링크.split('/').pop() : '') || '').trim();
+          const profileImg = getProfileImgUrl(name, m.profile_img || m.프로필사진);
 
           let roleBadgeHTML = '';
           if (name === '망시') {
@@ -497,7 +532,7 @@ const RACE_ICONS = {
             <div class="dash-card p-5 rounded-2xl flex flex-col justify-between hover:scale-[1.02] transition duration-200">
               <div>
                 <div class="flex items-start justify-between mb-3">
-                  <img src="${m.profile_img || m.프로필사진 || 'https://via.placeholder.com/80'}" class="w-16 h-16 rounded-2xl object-cover border-2 ${r.border} shadow-lg">
+                  <img src="${profileImg}" class="w-16 h-16 rounded-2xl object-cover border-2 ${r.border} shadow-lg">
                   <span class="text-xs px-2.5 py-1 rounded-full border ${r.badgeBg} font-bold flex items-center gap-1.5">
                     <img src="${r.icon}" class="w-4 h-4 object-contain"> ${r.name}
                   </span>
@@ -795,7 +830,7 @@ const RACE_ICONS = {
       const lastDate = new Date(year, month + 1, 0).getDate();
 
       for(let i=0; i<firstDay; i++) {
-        grid.innerHTML += `<div class="h-40 bg-slate-950/30 rounded-xl"></div>`;
+        grid.innerHTML += `<div class="h-32 sm:h-40 bg-slate-950/30 rounded-xl"></div>`;
       }
 
       for(let date=1; date<=lastDate; date++) {
@@ -823,8 +858,7 @@ const RACE_ICONS = {
             const title = e.title || e.일정내용 || e.내용 || '';
             const time = e.time || e.시간 || '';
             return `
-              <!-- 💡 일정 내부 박스 배경색을 검은색에서 어두운 회색(bg-slate-800/90 등)으로 변경 -->
-              <div class="bg-slate-800/90 hover:bg-slate-800 border border-slate-700 rounded px-1.5 py-1 mb-1 truncate shadow-sm">
+              <div class="bg-slate-800/90 hover:bg-slate-800 border border-slate-700 rounded px-1 py-0.5 sm:px-1.5 sm:py-1 mb-1 truncate shadow-sm">
                 <span class="text-emerald-400 font-bold mr-1">[${time}]</span>
                 <span class="text-white">${title}</span>
               </div>
@@ -832,14 +866,14 @@ const RACE_ICONS = {
           }).join('');
 
           eventBadges = `
-            <div onclick="openScheduleModal('${year}년 ${month + 1}월 ${date}일', ${year}, ${month + 1}, ${date})" class="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-[10px] p-1.5 rounded-lg mt-1 cursor-pointer transition group max-h-28 overflow-y-auto">
+            <div onclick="openScheduleModal('${year}년 ${month + 1}월 ${date}일', ${year}, ${month + 1}, ${date})" class="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-[9px] sm:text-[10px] p-1 sm:p-1.5 rounded-lg mt-1 cursor-pointer transition group max-h-24 sm:max-h-28 overflow-y-auto">
               ${badgesHTML}
             </div>
           `;
         }
 
         grid.innerHTML += `
-          <div class="h-40 bg-slate-900/60 p-2 rounded-xl border border-slate-800/60 flex flex-col justify-between overflow-hidden">
+          <div class="h-32 sm:h-40 bg-slate-900/60 p-1.5 sm:p-2 rounded-xl border border-slate-800/60 flex flex-col justify-between overflow-hidden">
             <span class="text-xs font-bold text-slate-400">${date}</span>
             <div class="overflow-y-auto flex-1">${eventBadges}</div>
           </div>
